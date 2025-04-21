@@ -1,0 +1,199 @@
+/* 基础样式重置 */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  
+  html, body {
+    height: 100%;
+    font-family: 'Microsoft YaHei', 'PingFang SC', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-size: 16px;
+    line-height: 1.5;
+    color: #333;
+    background-color: #f5f5f5;
+  }
+  
+  #app {
+    height: 100%;
+  }
+  
+  /* 链接样式 */
+  a {
+    text-decoration: none;
+    color: #2196F3;
+    transition: color 0.3s ease;
+  }
+  
+  a:hover {
+    color: #0D47A1;
+  }
+  
+  /* 通用按钮样式 */
+  button {
+    cursor: pointer;
+    outline: none;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 4px;
+    font-weight: 500;
+    transition: background-color 0.3s ease, transform 0.1s ease;
+  }
+  
+  button:hover {
+    opacity: 0.9;
+  }
+  
+  button:active {
+    transform: scale(0.98);
+  }
+  
+  /* 表单元素样式 */
+  input, select, textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    transition: border-color 0.3s ease;
+  }
+  
+  input:focus, select:focus, textarea:focus {
+    border-color: #2196F3;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.3);
+  }
+  
+  /* 列表样式 */
+  ul, ol {
+    list-style-position: inside;
+    padding-left: 20px;
+  }
+  
+  /* 表格样式 */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  th, td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+  }
+  
+  th {
+    background-color: #f5f5f5;
+    font-weight: 600;
+  }
+  
+  /* 卡片样式 */
+  .card {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    margin-bottom: 20px;
+  }
+  
+  /* 加载动画 */
+  .loading-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+  }
+  
+  .loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #2196F3;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+  
+  .loading-text {
+    margin-top: 15px;
+    font-size: 18px;
+    color: #666;
+  }
+  
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  
+  /* 响应式布局 */
+  @media (max-width: 768px) {
+    /* 移动设备样式 */
+    .card {
+      padding: 15px;
+    }
+    
+    th, td {
+      padding: 8px 10px;
+    }
+    
+    /* 适应小屏幕的表格 */
+    .responsive-table {
+      overflow-x: auto;
+    }
+  }
+  
+  /* 自定义颜色 */
+  :root {
+    --primary-color: #2196F3;
+    --primary-dark: #0D47A1;
+    --success-color: #4CAF50;
+    --warning-color: #FFC107;
+    --danger-color: #F44336;
+    --light-color: #F5F5F5;
+    --dark-color: #333333;
+    --gray-color: #9E9E9E;
+  }
+  
+  /* 工具类 */
+  .text-center { text-align: center; }
+  .text-right { text-align: right; }
+  .text-left { text-align: left; }
+  .font-bold { font-weight: bold; }
+  .mt-20 { margin-top: 20px; }
+  .mb-20 { margin-bottom: 20px; }
+  .ml-20 { margin-left: 20px; }
+  .mr-20 { margin-right: 20px; }
+  
+  /* 颜色类 */
+  .text-primary { color: var(--primary-color); }
+  .text-success { color: var(--success-color); }
+  .text-warning { color: var(--warning-color); }
+  .text-danger { color: var(--danger-color); }
+  .text-gray { color: var(--gray-color); }
+  
+  /* 按钮类型 */
+  .btn-primary {
+    background-color: var(--primary-color);
+    color: white;
+  }
+  
+  .btn-success {
+    background-color: var(--success-color);
+    color: white;
+  }
+  
+  .btn-warning {
+    background-color: var(--warning-color);
+    color: black;
+  }
+  
+  .btn-danger {
+    background-color: var(--danger-color);
+    color: white;
+  }
+  
+  .btn-light {
+    background-color: var(--light-color);
+    color: var(--dark-color);
+    border: 1px solid #ddd;
+  }
