@@ -1,0 +1,894 @@
+<!-- OTAProject/templates/dashboard/agency.html -->
+{% extends "base.html" %}
+
+{% block title %}旅行社管理 - OTA系统{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.7.1/dist/leaflet.css">
+{% endblock %}
+
+{% block styles %}
+.dashboard-container {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+.navbar {
+    background-color: #343a40;
+}
+.navbar-brand, .nav-link {
+    color: white !important;
+}
+.content-container {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+}
+.sidebar {
+    width: 250px;
+    background-color: #f8f9fa;
+    padding: 20px;
+    border-right: 1px solid #dee2e6;
+}
+.main-content {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+}
+.map-container {
+    height: 500px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+}
+.route-card {
+    margin-bottom: 15px;
+    cursor: pointer;
+}
+.chat-window {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 350px;
+    height: 500px;
+    background: white;
+    box-shadow: 0 0 15px rgba(0,0,0,0.2);
+    display: none;
+    border-radius: 10px;
+    z-index: 1000;
+}
+.chat-header {
+    padding: 10px;
+    background: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.chat-messages {
+    height: 350px;
+    padding: 10px;
+    overflow-y: auto;
+}
+.chat-input {
+    padding: 10px;
+    border-top: 1px solid #dee2e6;
+}
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <!-- 导航栏 -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">OTA旅行社管理系统</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#" data-view="routes">线路管理</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" data-view="tourists">游客管理</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" data-view="itineraries">行程管理</a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
+                            {{ user.travel_agency.agency_name }}
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="#" id="chat-button">聊天</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="/logout/">退出登录</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 内容区 -->
+    <div class="content-container">
+        <!-- 路线管理视图 -->
+        <div id="routes-view" class="main-content">
+            <h2 class="mb-4">线路管理</h2>
+
+            <div class="map-container" id="map"></div>
+
+            <div class="d-flex justify-content-center mb-3">
+                <div class="btn-group" role="group">
+                    <button id="view-mode-btn" class="btn btn-primary active">查看模式</button>
+                    <button id="edit-mode-btn" class="btn btn-outline-primary">线路编辑模式</button>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-center mb-4">
+                <button id="add-route-btn" class="btn btn-success me-2">添加线路</button>
+                <button id="view-routes-btn" class="btn btn-info">查看所有线路</button>
+            </div>
+
+            <div id="routes-list" class="row">
+                <!-- 路线列表将动态生成 -->
+            </div>
+        </div>
+
+        <!-- 游客管理视图 -->
+        <div id="tourists-view" class="main-content" style="display: none;">
+            <h2 class="mb-4">游客管理</h2>
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>姓名</th>
+                            <th>联系方式</th>
+                            <th>报名行程</th>
+                            <th>状态</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tourists-table">
+                        <!-- 游客列表将动态生成 -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 行程管理视图 -->
+        <div id="itineraries-view" class="main-content" style="display: none;">
+            <h2 class="mb-4">行程管理</h2>
+            <button id="add-itinerary-btn" class="btn btn-primary mb-3">创建新行程</button>
+
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>线路名称</th>
+                            <th>出发日期</th>
+                            <th>指派导游</th>
+                            <th>报名人数</th>
+                            <th>状态</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="itineraries-table">
+                        <!-- 行程列表将动态生成 -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 聊天窗口 -->
+    <div id="chat-window" class="chat-window">
+        <div class="chat-header">
+            <h5 class="mb-0">聊天</h5>
+            <button type="button" class="btn-close" id="close-chat-btn"></button>
+        </div>
+        <div class="list-group list-group-flush">
+            <a href="#" class="list-group-item list-group-item-action active" data-chat-id="agency-group">
+                文旅局与旅行社群组
+            </a>
+            <!-- 导游列表将通过JS动态添加 -->
+        </div>
+        <div id="chat-messages" class="chat-messages">
+            <!-- 聊天消息将通过JS动态添加 -->
+        </div>
+        <div class="chat-input">
+            <div class="input-group">
+                <input type="text" id="message-input" class="form-control" placeholder="输入消息...">
+                <button id="send-message-btn" class="btn btn-primary">发送</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 添加线路模态框 -->
+    <div class="modal fade" id="add-route-modal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">添加旅游线路</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="add-route-form">
+                        <div class="mb-3">
+                            <label for="route-name" class="form-label">线路名称</label>
+                            <input type="text" class="form-control" id="route-name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="route-description" class="form-label">线路描述</label>
+                            <textarea class="form-control" id="route-description" rows="3"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" id="save-route-btn">保存线路</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 添加行程模态框 -->
+    <div class="modal fade" id="add-itinerary-modal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">创建新行程</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="add-itinerary-form">
+                        <div class="mb-3">
+                            <label for="route-select" class="form-label">选择线路</label>
+                            <select class="form-control" id="route-select" required>
+                                <!-- 线路选项将动态填充 -->
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="start-date" class="form-label">出发日期</label>
+                            <input type="date" class="form-control" id="start-date" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="guide-select" class="form-label">指派导游</label>
+                            <select class="form-control" id="guide-select" required>
+                                <!-- 导游选项将动态填充 -->
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="max-tourists" class="form-label">最大游客数量</label>
+                            <input type="number" class="form-control" id="max-tourists" min="1" value="20">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" id="save-itinerary-btn">创建行程</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/leaflet@1.7.1/dist/leaflet.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 初始化地图
+    const map = L.map('map').setView([35.86166, 104.195397], 4); // 中国中心位置
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
+
+    // 点标记和路线数组
+    let routePoints = [];
+    let currentPoint = null;
+    let editMode = false;
+
+    // 视图切换
+    const navLinks = document.querySelectorAll('.nav-link[data-view]');
+    const views = {
+        'routes': document.getElementById('routes-view'),
+        'tourists': document.getElementById('tourists-view'),
+        'itineraries': document.getElementById('itineraries-view')
+    };
+
+    navLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+
+            // 移除所有active类
+            navLinks.forEach(l => l.classList.remove('active'));
+
+            // 添加当前active类
+            this.classList.add('active');
+
+            // 获取视图名称
+            const viewName = this.getAttribute('data-view');
+
+            // 隐藏所有视图
+            Object.values(views).forEach(v => v.style.display = 'none');
+
+            // 显示当前视图
+            views[viewName].style.display = 'block';
+
+            // 特殊处理：调整地图大小
+            if (viewName === 'routes') {
+                map.invalidateSize();
+                loadRoutes();
+            } else if (viewName === 'tourists') {
+                loadTourists();
+            } else if (viewName === 'itineraries') {
+                loadItineraries();
+            }
+        });
+    });
+
+    // 模式切换按钮
+    const viewModeBtn = document.getElementById('view-mode-btn');
+    const editModeBtn = document.getElementById('edit-mode-btn');
+
+    viewModeBtn.addEventListener('click', function() {
+        editMode = false;
+        viewModeBtn.classList.add('active');
+        editModeBtn.classList.remove('active');
+    });
+
+    editModeBtn.addEventListener('click', function() {
+        editMode = true;
+        editModeBtn.classList.add('active');
+        viewModeBtn.classList.remove('active');
+    });
+
+    // 地图点击事件
+    map.on('click', function(e) {
+        if (editMode) {
+            addRoutePoint(e.latlng);
+        }
+    });
+
+    // 添加路线点
+    function addRoutePoint(latlng) {
+        const marker = L.marker(latlng, {draggable: true}).addTo(map);
+
+        const pointInfo = {
+            id: Date.now().toString(),
+            position: latlng,
+            marker: marker,
+            name: '',
+            images: [],
+            description: ''
+        };
+
+        marker.on('click', function() {
+            showPointInfoPanel(pointInfo);
+        });
+
+        routePoints.push(pointInfo);
+
+        // 如果有前一个点，则连接
+        if (routePoints.length > 1) {
+            const prevPoint = routePoints[routePoints.length - 2];
+            const line = L.polyline([
+                [prevPoint.position.lat, prevPoint.position.lng],
+                [latlng.lat, latlng.lng]
+            ], {color: 'blue'}).addTo(map);
+
+            pointInfo.line = line;
+        }
+
+        // 显示点信息面板
+        showPointInfoPanel(pointInfo);
+    }
+
+    // 显示点信息面板（简化版）
+    function showPointInfoPanel(point) {
+        const name = prompt('请输入景点名称:', point.name || '');
+        if (name) {
+            point.name = name;
+            point.marker.bindPopup(name).openPopup();
+        }
+    }
+
+    // 添加线路按钮
+    const addRouteBtn = document.getElementById('add-route-btn');
+    addRouteBtn.addEventListener('click', function() {
+        if (routePoints.length < 2) {
+            alert('请至少添加两个点来形成线路');
+            return;
+        }
+
+        // 显示添加线路模态框
+        const addRouteModal = new bootstrap.Modal(document.getElementById('add-route-modal'));
+        addRouteModal.show();
+    });
+
+    // 保存线路按钮
+    document.getElementById('save-route-btn').addEventListener('click', function() {
+        const routeName = document.getElementById('route-name').value;
+        const routeDescription = document.getElementById('route-description').value;
+
+        if (!routeName) {
+            alert('请输入线路名称');
+            return;
+        }
+
+        // 收集线路数据
+        const routeData = {
+            name: routeName,
+            description: routeDescription,
+            points: routePoints.map(p => ({
+                name: p.name || '未命名景点',
+                latitude: p.position.lat,
+                longitude: p.position.lng,
+                description: p.description || ''
+            }))
+        };
+
+        // 发送请求保存线路
+        fetch('/api/routes/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify(routeData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('线路保存成功！');
+
+                // 关闭模态框
+                bootstrap.Modal.getInstance(document.getElementById('add-route-modal')).hide();
+
+                // 重置路线编辑
+                resetRouteEditing();
+
+                // 重新加载路线
+                loadRoutes();
+            } else {
+                alert('保存失败: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('保存过程中发生错误');
+        });
+    });
+
+    // 重置路线编辑
+    function resetRouteEditing() {
+        // 清除地图上的标记和路线
+        routePoints.forEach(point => {
+            map.removeLayer(point.marker);
+            if (point.line) {
+                map.removeLayer(point.line);
+            }
+        });
+
+        // 重置变量
+        routePoints = [];
+        currentPoint = null;
+
+        // 切换回查看模式
+        viewModeBtn.click();
+    }
+
+    // 加载路线列表
+    function loadRoutes() {
+        fetch('/api/routes/')
+        .then(response => response.json())
+        .then(data => {
+            const routesList = document.getElementById('routes-list');
+            routesList.innerHTML = '';
+
+            if (data.routes.length === 0) {
+                routesList.innerHTML = '<p class="text-center">暂无线路，请添加新线路</p>';
+                return;
+            }
+
+            data.routes.forEach(route => {
+                const routeCard = document.createElement('div');
+                routeCard.className = 'col-md-4 mb-4';
+                routeCard.innerHTML = `
+                    <div class="card route-card" data-route-id="${route.id}">
+                        <div class="card-body">
+                            <h5 class="card-title">${route.name}</h5>
+                            <p class="card-text">${route.description || '无描述'}</p>
+                            <p class="card-text"><small class="text-muted">景点数量: ${route.point_count}</small></p>
+                            <div class="d-flex justify-content-between">
+                                <button class="btn btn-sm btn-primary view-route-btn">查看线路</button>
+                                <button class="btn btn-sm btn-danger delete-route-btn">删除</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                routesList.appendChild(routeCard);
+
+                // 添加事件监听器
+                routeCard.querySelector('.view-route-btn').addEventListener('click', function() {
+                    viewRoute(route.id);
+                });
+
+                routeCard.querySelector('.delete-route-btn').addEventListener('click', function() {
+                    if (confirm(`确定要删除线路"${route.name}"吗？`)) {
+                        deleteRoute(route.id);
+                    }
+                });
+            });
+        })
+        .catch(error => console.error('Error loading routes:', error));
+    }
+
+    // 查看线路
+    function viewRoute(routeId) {
+        fetch(`/api/routes/${routeId}/`)
+        .then(response => response.json())
+        .then(data => {
+            // 清除地图上的所有标记
+            map.eachLayer(layer => {
+                if (layer instanceof L.Marker || layer instanceof L.Polyline) {
+                    map.removeLayer(layer);
+                }
+            });
+
+            // 添加地图基础层
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
+
+            const points = data.points;
+            const markers = [];
+            const latlngs = [];
+
+            // 添加景点标记
+            points.forEach(point => {
+                const latlng = [point.latitude, point.longitude];
+                const marker = L.marker(latlng)
+                    .bindPopup(`<b>${point.name}</b><br>${point.description || ''}`)
+                    .addTo(map);
+
+                markers.push(marker);
+                latlngs.push(latlng);
+            });
+
+            // 添加路线
+            if (latlngs.length > 1) {
+                const polyline = L.polyline(latlngs, {color: 'blue'}).addTo(map);
+            }
+
+            // 调整地图视图以包含所有点
+            if (markers.length > 0) {
+                const group = new L.featureGroup(markers);
+                map.fitBounds(group.getBounds(), {padding: [30, 30]});
+            }
+        })
+        .catch(error => console.error('Error viewing route:', error));
+    }
+
+    // 删除线路
+    function deleteRoute(routeId) {
+        fetch(`/api/routes/${routeId}/`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('线路删除成功！');
+                loadRoutes();
+            } else {
+                alert('删除失败: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('删除过程中发生错误');
+        });
+    }
+
+    // 加载游客列表
+    function loadTourists() {
+        fetch('/api/tourists/')
+        .then(response => response.json())
+        .then(data => {
+            const touristsTable = document.getElementById('tourists-table');
+            touristsTable.innerHTML = '';
+
+            if (data.tourists.length === 0) {
+                touristsTable.innerHTML = '<tr><td colspan="5" class="text-center">暂无游客报名记录</td></tr>';
+                return;
+            }
+
+            data.tourists.forEach(tourist => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${tourist.name}</td>
+                    <td>${tourist.phone}</td>
+                    <td>${tourist.itinerary_name}</td>
+                    <td>
+                        <span class="badge ${tourist.status === '已确认' ? 'bg-success' : 'bg-warning'}">${tourist.status}</span>
+                    </td>
+                    <td>
+                        <button class="btn btn-sm btn-primary confirm-btn ${tourist.status === '已确认' ? 'd-none' : ''}"
+                                data-booking-id="${tourist.booking_id}">确认</button>
+                        <button class="btn btn-sm btn-danger cancel-btn"
+                                data-booking-id="${tourist.booking_id}">取消</button>
+                    </td>
+                `;
+                touristsTable.appendChild(row);
+
+                // 添加事件监听器
+                const confirmBtn = row.querySelector('.confirm-btn');
+                if (confirmBtn) {
+                    confirmBtn.addEventListener('click', function() {
+                        confirmBooking(tourist.booking_id);
+                    });
+                }
+
+                row.querySelector('.cancel-btn').addEventListener('click', function() {
+                    if (confirm(`确定要取消 ${tourist.name} 的报名吗？`)) {
+                        cancelBooking(tourist.booking_id);
+                    }
+                });
+            });
+        })
+        .catch(error => console.error('Error loading tourists:', error));
+    }
+
+    // 确认预订
+    function confirmBooking(bookingId) {
+        fetch(`/api/bookings/${bookingId}/confirm/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('已确认游客报名！');
+                loadTourists();
+            } else {
+                alert('确认失败: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('操作过程中发生错误');
+        });
+    }
+
+    // 取消预订
+    function cancelBooking(bookingId) {
+        fetch(`/api/bookings/${bookingId}/cancel/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('已取消游客报名！');
+                loadTourists();
+            } else {
+                alert('取消失败: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('操作过程中发生错误');
+        });
+    }
+
+    // 加载行程列表
+    function loadItineraries() {
+        fetch('/api/itineraries/')
+        .then(response => response.json())
+        .then(data => {
+            const itinerariesTable = document.getElementById('itineraries-table');
+            itinerariesTable.innerHTML = '';
+
+            if (data.itineraries.length === 0) {
+                itinerariesTable.innerHTML = '<tr><td colspan="6" class="text-center">暂无行程，请创建新行程</td></tr>';
+                return;
+            }
+
+            data.itineraries.forEach(itinerary => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${itinerary.route_name}</td>
+                    <td>${itinerary.start_date}</td>
+                    <td>${itinerary.guide_name || '未指派'}</td>
+                    <td>${itinerary.tourist_count} / ${itinerary.max_tourists}</td>
+                    <td>
+                        <span class="badge ${itinerary.status === '已取消' ? 'bg-danger' : 'bg-success'}">${itinerary.status}</span>
+                    </td>
+                    <td>
+                        <button class="btn btn-sm btn-info view-itinerary-btn" data-itinerary-id="${itinerary.id}">查看</button>
+                        <button class="btn btn-sm btn-danger cancel-itinerary-btn ${itinerary.status === '已取消' ? 'd-none' : ''}"
+                                data-itinerary-id="${itinerary.id}">取消行程</button>
+                    </td>
+                `;
+                itinerariesTable.appendChild(row);
+
+                // 添加事件监听器
+                row.querySelector('.view-itinerary-btn').addEventListener('click', function() {
+                    viewItinerary(itinerary.id);
+                });
+
+                const cancelBtn = row.querySelector('.cancel-itinerary-btn');
+                if (cancelBtn) {
+                    cancelBtn.addEventListener('click', function() {
+                        if (confirm(`确定要取消行程"${itinerary.route_name} (${itinerary.start_date})"吗？`)) {
+                            cancelItinerary(itinerary.id);
+                        }
+                    });
+                }
+            });
+        })
+        .catch(error => console.error('Error loading itineraries:', error));
+    }
+
+    // 查看行程
+    function viewItinerary(itineraryId) {
+        // 实现行程详情查看逻辑
+        alert(`查看行程ID: ${itineraryId} 的详细信息`);
+    }
+
+    // 取消行程
+    function cancelItinerary(itineraryId) {
+        fetch(`/api/itineraries/${itineraryId}/cancel/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('行程已取消！');
+                loadItineraries();
+            } else {
+                alert('取消失败: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('操作过程中发生错误');
+        });
+    }
+
+    // 添加行程按钮
+    document.getElementById('add-itinerary-btn').addEventListener('click', function() {
+        // 加载线路列表
+        fetch('/api/routes/')
+        .then(response => response.json())
+        .then(data => {
+            const routeSelect = document.getElementById('route-select');
+            routeSelect.innerHTML = '<option value="">请选择线路</option>';
+
+            data.routes.forEach(route => {
+                const option = document.createElement('option');
+                option.value = route.id;
+                option.textContent = route.name;
+                routeSelect.appendChild(option);
+            });
+
+            // 加载导游列表
+            return fetch('/api/guides/');
+        })
+        .then(response => response.json())
+        .then(data => {
+            const guideSelect = document.getElementById('guide-select');
+            guideSelect.innerHTML = '<option value="">请选择导游</option>';
+
+            data.guides.forEach(guide => {
+                const option = document.createElement('option');
+                option.value = guide.id;
+                option.textContent = guide.name;
+                guideSelect.appendChild(option);
+            });
+
+            // 显示模态框
+            const addItineraryModal = new bootstrap.Modal(document.getElementById('add-itinerary-modal'));
+            addItineraryModal.show();
+        })
+        .catch(error => console.error('Error:', error));
+    });
+
+    // 保存行程按钮
+    document.getElementById('save-itinerary-btn').addEventListener('click', function() {
+        const routeId = document.getElementById('route-select').value;
+        const startDate = document.getElementById('start-date').value;
+        const guideId = document.getElementById('guide-select').value;
+        const maxTourists = document.getElementById('max-tourists').value;
+
+        if (!routeId || !startDate) {
+            alert('请选择线路和出发日期');
+            return;
+        }
+
+        // 收集行程数据
+        const itineraryData = {
+            route_id: routeId,
+            start_date: startDate,
+            guide_id: guideId || null,
+            max_tourists: maxTourists
+        };
+
+        // 发送请求创建行程
+        fetch('/api/itineraries/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify(itineraryData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('行程创建成功！');
+
+                // 关闭模态框
+                bootstrap.Modal.getInstance(document.getElementById('add-itinerary-modal')).hide();
+
+                // 重新加载行程
+                loadItineraries();
+            } else {
+                alert('创建失败: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('创建过程中发生错误');
+        });
+    });
+
+    // 聊天功能
+    const chatButton = document.getElementById('chat-button');
+    const chatWindow = document.getElementById('chat-window');
+    const closeChat = document.getElementById('close-chat-btn');
+
+    chatButton.addEventListener('click', function() {
+        chatWindow.style.display = 'block';
+        // TODO: 加载聊天消息记录
+    });
+
+    closeChat.addEventListener('click', function() {
+        chatWindow.style.display = 'none';
+    });
+
+    // 获取CSRF令牌的辅助函数
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    // 初始化加载数据
+    loadRoutes();
+});
+</script>
+{% endblock %}

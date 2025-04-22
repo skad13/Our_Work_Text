@@ -1,0 +1,259 @@
+<!-- OTAProject/templates/registration/register.html -->
+{% extends "base.html" %}
+
+{% block title %}注册 - OTA系统{% endblock %}
+
+{% block styles %}
+.register-container {
+    max-width: 500px;
+    margin: 50px auto;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 15px rgba(0,0,0,0.1);
+    background-color: white;
+}
+.register-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+.form-group {
+    margin-bottom: 15px;
+}
+.error-message {
+    color: red;
+    margin-top: 15px;
+}
+.form-tabs {
+    display: flex;
+    margin-bottom: 20px;
+}
+.form-tab {
+    flex: 1;
+    text-align: center;
+    padding: 10px;
+    cursor: pointer;
+    border-bottom: 2px solid #ddd;
+}
+.form-tab.active {
+    border-bottom: 2px solid #007bff;
+    color: #007bff;
+}
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="register-container">
+        <div class="register-header">
+            <h2>用户注册</h2>
+            <p>选择您的角色类型</p>
+        </div>
+
+        <div class="form-tabs">
+            <div class="form-tab active" data-type="tourist">游客</div>
+            <div class="form-tab" data-type="guide">导游</div>
+            <div class="form-tab" data-type="travel_agency">旅行社</div>
+            <div class="form-tab" data-type="tourism_bureau">文旅局</div>
+        </div>
+
+        <form id="register-form">
+            {% csrf_token %}
+            <input type="hidden" id="user-type" name="user_type" value="tourist">
+
+            <!-- 基本信息字段 -->
+            <div class="form-group">
+                <label for="username">用户名</label>
+                <input type="text" class="form-control" id="username" name="username" required>
+            </div>
+            <div class="form-group">
+                <label for="password">密码</label>
+                <input type="password" class="form-control" id="password" name="password" required>
+            </div>
+            <div class="form-group">
+                <label for="confirm-password">确认密码</label>
+                <input type="password" class="form-control" id="confirm-password" name="confirm_password" required>
+            </div>
+            <div class="form-group">
+                <label for="email">邮箱</label>
+                <input type="email" class="form-control" id="email" name="email" required>
+            </div>
+            <div class="form-group">
+                <label for="phone">电话</label>
+                <input type="tel" class="form-control" id="phone" name="phone" required>
+            </div>
+
+            <!-- 导游特有字段 -->
+            <div id="guide-fields" style="display: none;">
+                <div class="form-group">
+                    <label for="guide-id">导游证号</label>
+                    <input type="text" class="form-control" id="guide-id" name="guide_id">
+                </div>
+                <div class="form-group">
+                    <label for="travel-agency">所属旅行社</label>
+                    <select class="form-control" id="travel-agency" name="travel_agency_id">
+                        <option value="">请选择旅行社</option>
+                        <!-- 旅行社选项将通过JavaScript动态填充 -->
+                    </select>
+                </div>
+            </div>
+
+            <!-- 旅行社特有字段 -->
+            <div id="travel-agency-fields" style="display: none;">
+                <div class="form-group">
+                    <label for="agency-name">旅行社名称</label>
+                    <input type="text" class="form-control" id="agency-name" name="agency_name">
+                </div>
+                <div class="form-group">
+                    <label for="license-number">营业执照号</label>
+                    <input type="text" class="form-control" id="license-number" name="license_number">
+                </div>
+                <div class="form-group">
+                    <label for="address">地址</label>
+                    <textarea class="form-control" id="address" name="address" rows="2"></textarea>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <button type="submit" class="btn btn-primary w-100">注册</button>
+            </div>
+            <div class="text-center mt-3">
+                <a href="/login/" class="text-decoration-none">已有账号？点击登录</a>
+            </div>
+            <div id="error-message" class="error-message text-center"></div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('register-form');
+    const errorMessage = document.getElementById('error-message');
+    const userTypeInput = document.getElementById('user-type');
+    const guideFields = document.getElementById('guide-fields');
+    const travelAgencyFields = document.getElementById('travel-agency-fields');
+    const tabs = document.querySelectorAll('.form-tab');
+    const travelAgencySelect = document.getElementById('travel-agency');
+
+    // 加载旅行社列表（用于导游注册选择）
+    function loadTravelAgencies() {
+        fetch('/api/travel-agencies/')
+        .then(response => response.json())
+        .then(data => {
+            travelAgencySelect.innerHTML = '<option value="">请选择旅行社</option>';
+            data.travel_agencies.forEach(agency => {
+                const option = document.createElement('option');
+                option.value = agency.id;
+                option.textContent = agency.name;
+                travelAgencySelect.appendChild(option);
+            });
+        })
+        .catch(error => console.error('Error loading travel agencies:', error));
+    }
+
+    // 初始化加载旅行社列表
+    loadTravelAgencies();
+
+    // 选项卡切换
+    tabs.forEach(tab => {
+        tab.addEventListener('click', function() {
+            // 移除所有active类
+            tabs.forEach(t => t.classList.remove('active'));
+            // 设置当前选项卡为active
+            this.classList.add('active');
+
+            // 获取用户类型
+            const userType = this.getAttribute('data-type');
+            userTypeInput.value = userType;
+
+            // 显示/隐藏特定角色的字段
+            guideFields.style.display = userType === 'guide' ? 'block' : 'none';
+            travelAgencyFields.style.display = userType === 'travel_agency' ? 'block' : 'none';
+        });
+    });
+
+    // 表单提交
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        // 验证密码是否匹配
+        const password = document.getElementById('password').value;
+        const confirmPassword = document.getElementById('confirm-password').value;
+
+        if (password !== confirmPassword) {
+            errorMessage.textContent = '两次输入的密码不匹配';
+            return;
+        }
+
+        // 收集表单数据
+        const formData = new FormData(form);
+        const userData = {
+            username: formData.get('username'),
+            password: formData.get('password'),
+            email: formData.get('email'),
+            phone: formData.get('phone'),
+            user_type: formData.get('user_type'),
+        };
+
+        // 添加特定角色的数据
+        if (userData.user_type === 'guide') {
+            userData.guide_id = formData.get('guide_id');
+            userData.travel_agency_id = formData.get('travel_agency_id');
+
+            // 验证导游特有字段
+            if (!userData.guide_id) {
+                errorMessage.textContent = '请输入导游证号';
+                return;
+            }
+            if (!userData.travel_agency_id) {
+                errorMessage.textContent = '请选择所属旅行社';
+                return;
+            }
+        }
+
+        if (userData.user_type === 'travel_agency') {
+            userData.agency_name = formData.get('agency_name');
+            userData.license_number = formData.get('license_number');
+            userData.address = formData.get('address');
+
+            // 验证旅行社特有字段
+            if (!userData.agency_name) {
+                errorMessage.textContent = '请输入旅行社名称';
+                return;
+            }
+            if (!userData.license_number) {
+                errorMessage.textContent = '请输入营业执照号';
+                return;
+            }
+        }
+
+        // 获取CSRF令牌
+        const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+        // 发送注册请求
+        fetch('/api/register/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken
+            },
+            body: JSON.stringify(userData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // 注册成功，跳转到登录页面或显示成功信息
+                alert('注册成功！请登录系统');
+                window.location.href = '/login/';
+            } else {
+                errorMessage.textContent = data.error || '注册失败，请检查输入信息';
+            }
+        })
+        .catch(error => {
+            errorMessage.textContent = '服务器错误，请稍后再试';
+            console.error('Error:', error);
+        });
+    });
+});
+</script>
+{% endblock %}
