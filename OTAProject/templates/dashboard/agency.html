@@ -1,0 +1,4458 @@
+{% extends "base.html" %}
+
+{% block title %}旅行社管理系统 - OTA系统{% endblock %}
+
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/filepond@4.30.4/dist/filepond.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/filepond-plugin-image-preview@4.6.11/dist/filepond-plugin-image-preview.min.css" rel="stylesheet">
+{% endblock %}
+
+{% block styles %}
+/* 基础样式 */
+.dashboard {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.dashboard-header {
+    background: linear-gradient(120deg, var(--primary-color), var(--dark-color));
+    color: white;
+    padding: 20px 0;
+}
+
+.navbar-brand {
+    font-size: 1.4rem;
+    font-weight: 700;
+}
+
+.dashboard-container {
+    flex-grow: 1;
+    padding: 30px 0;
+}
+
+.dashboard-sidebar {
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+    padding: 20px;
+    height: 100%;
+}
+
+.sidebar-menu {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.sidebar-menu li {
+    margin-bottom: 5px;
+}
+
+.sidebar-menu li a {
+    display: flex;
+    align-items: center;
+    padding: 12px 15px;
+    color: #555;
+    text-decoration: none;
+    border-radius: 10px;
+    transition: all 0.3s ease;
+}
+
+.sidebar-menu li a:hover, .sidebar-menu li a.active {
+    background: rgba(58, 123, 213, 0.1);
+    color: var(--primary-color);
+}
+
+.sidebar-menu li a i {
+    margin-right: 10px;
+    font-size: 1.2rem;
+}
+
+.dashboard-content {
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+    padding: 25px;
+    height: 100%;
+    overflow: auto;
+    min-height: 600px;
+}
+
+.dashboard-title {
+    margin-bottom: 25px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.dashboard-title h2 {
+    color: var(--dark-color);
+    font-weight: 700;
+    font-size: 1.6rem;
+    margin: 0;
+}
+
+/* 数据卡片样式 */
+.dashboard-card {
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+    background: #f8f9fa;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    cursor: pointer;
+}
+
+.dashboard-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+}
+
+.card-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 15px;
+}
+
+.card-icon i {
+    font-size: 1.8rem;
+    color: white;
+}
+
+.card-icon.routes {
+    background: linear-gradient(120deg, #3a7bd5, #00d2ff);
+}
+
+.card-icon.guides {
+    background: linear-gradient(120deg, #f2994a, #f2c94c);
+}
+
+.card-icon.bookings {
+    background: linear-gradient(120deg, #00b09b, #96c93d);
+}
+
+.card-icon.revenue {
+    background: linear-gradient(120deg, #8e2de2, #4a00e0);
+}
+
+.card-title {
+    font-size: 0.9rem;
+    color: #777;
+    margin-bottom: 5px;
+}
+
+.card-value {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--dark-color);
+}
+
+/* 表格样式 */
+.custom-table {
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+.custom-table th {
+    font-weight: 600;
+    color: #555;
+    padding: 15px;
+    border-bottom: 2px solid #eee;
+}
+
+.custom-table td {
+    padding: 15px;
+    vertical-align: middle;
+    border-bottom: 1px solid #eee;
+}
+
+.custom-table tr:last-child td {
+    border-bottom: none;
+}
+
+.badge {
+    padding: 8px 12px;
+    border-radius: 30px;
+    font-weight: 500;
+    font-size: 0.75rem;
+}
+
+.badge-success {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.badge-primary {
+    background-color: #cce5ff;
+    color: #004085;
+}
+
+.badge-danger {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+.badge-secondary {
+    background-color: #e2e3e5;
+    color: #383d41;
+}
+
+.action-btn {
+    padding: 8px 15px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.85rem;
+}
+
+.action-btn i {
+    margin-right: 5px;
+}
+
+/* 用户下拉菜单 */
+.user-dropdown .dropdown-toggle::after {
+    display: none;
+}
+
+.user-dropdown .dropdown-toggle {
+    background: transparent;
+    border: none;
+    color: white;
+    display: flex;
+    align-items: center;
+}
+
+.user-dropdown .dropdown-menu {
+    border-radius: 12px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    border: none;
+    padding: 10px;
+    min-width: 200px;
+}
+
+.user-dropdown .dropdown-item {
+    border-radius: 8px;
+    padding: 10px 15px;
+}
+
+.user-dropdown .dropdown-item i {
+    margin-right: 8px;
+}
+
+/* 空状态 */
+.empty-state {
+    text-align: center;
+    padding: 40px 20px;
+}
+
+.empty-state i {
+    font-size: 4rem;
+    color: #ddd;
+    display: block;
+    margin-bottom: 20px;
+}
+
+.empty-state h4 {
+    color: #777;
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+.empty-state p {
+    color: #999;
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+/* 标签页样式 */
+.tab-content {
+    padding-top: 20px;
+}
+
+.nav-tabs {
+    border-bottom: 1px solid #eee;
+}
+
+.nav-tabs .nav-link {
+    border: none;
+    color: #777;
+    font-weight: 600;
+    padding: 12px 20px;
+}
+
+.nav-tabs .nav-link:hover {
+    border: none;
+    color: var(--primary-color);
+}
+
+.nav-tabs .nav-link.active {
+    color: var(--primary-color);
+    border: none;
+    border-bottom: 2px solid var(--primary-color);
+    background: transparent;
+}
+
+/* 分页控件 */
+.pagination {
+    margin-top: 20px;
+    justify-content: center;
+}
+
+.pagination .page-link {
+    border-radius: 8px;
+    margin: 0 3px;
+    color: var(--primary-color);
+    border: 1px solid #dee2e6;
+}
+
+.pagination .page-item.active .page-link {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+    color: white;
+}
+
+.pagination .page-item.disabled .page-link {
+    color: #6c757d;
+    pointer-events: none;
+}
+
+/* 用户头像 */
+.user-avatar {
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-right: 10px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+/* 路线管理样式 */
+.route-management {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.route-tools {
+    margin-bottom: 15px;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 10px;
+}
+
+.map-container {
+    height: 400px;
+    margin-bottom: 15px;
+    border-radius: 10px;
+    overflow: hidden;
+    position: relative;
+}
+
+#map {
+    height: 100%;
+    width: 100%;
+}
+
+.map-search {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: 1000;
+    width: 300px;
+}
+
+.map-modes {
+    margin-top: 15px;
+    display: flex;
+    gap: 10px;
+}
+
+.route-points {
+    margin-top: 15px;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 10px;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.route-point {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    border-bottom: 1px solid #eee;
+}
+
+.route-point:last-child {
+    border-bottom: none;
+}
+
+.point-number {
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--primary-color);
+    color: white;
+    border-radius: 50%;
+    margin-right: 15px;
+    font-weight: bold;
+}
+
+.point-info {
+    flex-grow: 1;
+}
+
+.point-actions {
+    display: flex;
+    gap: 5px;
+}
+
+.point-details {
+    margin-top: 15px;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 10px;
+    display: none;
+}
+
+.point-details h5 {
+    margin-bottom: 15px;
+    color: var(--primary-color);
+}
+
+#existing-images {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 15px;
+}
+
+.image-preview {
+    position: relative;
+    width: 100px;
+}
+
+.image-preview img {
+    width: 100%;
+    height: 100px;
+    object-fit: cover;
+    border-radius: 5px;
+}
+
+.delete-image {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: white;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+/* 聊天窗口样式 */
+.chat-container {
+    height: 100%;
+    display: flex;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 0 15px rgba(0,0,0,0.1);
+}
+
+.chat-sidebar {
+    width: 300px;
+    background: #f5f7fa;
+    border-right: 1px solid #eee;
+    display: flex;
+    flex-direction: column;
+}
+
+.chat-sidebar-header {
+    padding: 15px;
+    border-bottom: 1px solid #eee;
+}
+
+.chat-contacts {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 10px;
+}
+
+.chat-contact {
+    padding: 10px;
+    display: flex;
+    align-items: center;
+    border-radius: 10px;
+    cursor: pointer;
+    margin-bottom: 5px;
+}
+
+.chat-contact:hover, .chat-contact.active {
+    background-color: #e9ecef;
+}
+
+.chat-contact-avatar {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    margin-right: 15px;
+    object-fit: cover;
+}
+
+.chat-contact-info {
+    flex-grow: 1;
+}
+
+.chat-contact-name {
+    font-weight: 600;
+    display: flex;
+    justify-content: space-between;
+}
+
+.chat-contact-preview {
+    font-size: 0.85rem;
+    color: #6c757d;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 180px;
+}
+
+.unread-badge {
+    background-color: var(--primary-color);
+    color: white;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    margin-left: 5px;
+}
+
+.chat-main {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.chat-header {
+    padding: 15px;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    align-items: center;
+}
+
+.chat-header-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    margin-right: 15px;
+    object-fit: cover;
+}
+
+.chat-header-info {
+    flex-grow: 1;
+}
+
+.chat-header-name {
+    font-weight: 600;
+}
+
+.chat-header-status {
+    font-size: 0.85rem;
+    color: #6c757d;
+}
+
+.chat-header-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.chat-messages {
+    flex-grow: 1;
+    padding: 15px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.chat-message {
+    max-width: 70%;
+    padding: 10px 15px;
+    border-radius: 18px;
+    position: relative;
+}
+
+.chat-message.sent {
+    align-self: flex-end;
+    background-color: var(--primary-color);
+    color: white;
+    border-bottom-right-radius: 5px;
+}
+
+.chat-message.received {
+    align-self: flex-start;
+    background-color: #f1f0f0;
+    color: var(--dark-color);
+    border-bottom-left-radius: 5px;
+}
+
+.chat-message-time {
+    font-size: 0.7rem;
+    opacity: 0.7;
+    margin-top: 5px;
+    display: block;
+    text-align: right;
+}
+
+.chat-form {
+    padding: 15px;
+    border-top: 1px solid #eee;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.chat-input {
+    flex-grow: 1;
+    border-radius: 30px;
+    padding: 10px 20px;
+    border: 1px solid #eee;
+    outline: none;
+    transition: border-color 0.3s;
+}
+
+.chat-input:focus {
+    border-color: var(--primary-color);
+}
+
+.send-btn {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.send-btn:hover {
+    transform: scale(1.05);
+    background-color: var(--dark-color);
+}
+
+.no-chat-selected {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    color: #6c757d;
+}
+
+.no-chat-selected i {
+    font-size: 5rem;
+    color: #dee2e6;
+    margin-bottom: 20px;
+}
+{% endblock %}
+
+{% block content %}
+<div class="dashboard">
+    <header class="dashboard-header">
+        <nav class="navbar navbar-dark">
+            <div class="container">
+                <a class="navbar-brand" href="/agency/dashboard/">
+                    <i class='bx bxs-building-house'></i> 旅行社管理系统
+                </a>
+                <div class="dropdown user-dropdown">
+                    <button class="btn dropdown-toggle" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        <img src="/static/images/default-avatar.png" id="navbarProfileImage" class="user-avatar" alt="用户头像">
+                        <span>{{ request.user.username }}</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                        <li><a class="dropdown-item" href="#" id="showSettingsModal"><i class='bx bx-cog'></i> 个人设置</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="/logout/"><i class='bx bx-log-out'></i> 退出登录</a></li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <div class="dashboard-container">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="dashboard-sidebar">
+                        <ul class="sidebar-menu">
+                            <li>
+                                <a href="#dashboard-tab" class="active" data-bs-toggle="tab">
+                                    <i class='bx bx-home-alt'></i> 总览
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#routes-tab" data-bs-toggle="tab">
+                                    <i class='bx bx-map-alt'></i> 路线管理
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#guides-tab" data-bs-toggle="tab">
+                                    <i class='bx bx-user-pin'></i> 导游管理
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#bookings-tab" data-bs-toggle="tab">
+                                    <i class='bx bx-calendar-check'></i> 预订管理
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#itineraries-tab" data-bs-toggle="tab">
+                                    <i class='bx bx-trip'></i> 行程安排
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#notifications-tab" data-bs-toggle="tab">
+                                    <i class='bx bx-message-square-detail'></i> 通知
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#statistics-tab" data-bs-toggle="tab">
+                                    <i class='bx bx-line-chart'></i> 统计分析
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-md-9">
+                    <div class="dashboard-content">
+                        <div class="tab-content">
+                            <!-- 仪表盘总览 -->
+                            <div class="tab-pane fade show active" id="dashboard-tab">
+                                <div class="dashboard-title">
+                                    <h2>仪表盘总览</h2>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6 col-lg-3">
+                                        <div class="dashboard-card" id="routes-card">
+                                            <div class="card-icon routes">
+                                                <i class='bx bx-map'></i>
+                                            </div>
+                                            <div class="card-title">线路总数</div>
+                                            <div class="card-value" id="routes-count">0</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 col-lg-3">
+                                        <div class="dashboard-card" id="guides-card">
+                                            <div class="card-icon guides">
+                                                <i class='bx bx-user-voice'></i>
+                                            </div>
+                                            <div class="card-title">导游总数</div>
+                                            <div class="card-value" id="guides-count">0</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 col-lg-3">
+                                        <div class="dashboard-card" id="bookings-card">
+                                            <div class="card-icon bookings">
+                                                <i class='bx bx-calendar-event'></i>
+                                            </div>
+                                            <div class="card-title">预订总数</div>
+                                            <div class="card-value" id="bookings-count">0</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 col-lg-3">
+                                        <div class="dashboard-card" id="revenue-card">
+                                            <div class="card-icon revenue">
+                                                <i class='bx bx-wallet'></i>
+                                            </div>
+                                            <div class="card-title">收入总额</div>
+                                            <div class="card-value" id="revenue-total">¥0</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row mt-4">
+                                    <div class="col-md-12">
+                                        <h5 class="mb-3">近期行程</h5>
+
+                                        <div id="recent-itineraries">
+                                            <div class="table-responsive">
+                                                <table class="table custom-table">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>行程名称</th>
+                                                            <th>出发日期</th>
+                                                            <th>导游</th>
+                                                            <th>预订人数</th>
+                                                            <th>状态</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody id="itineraries-list">
+                                                        <!-- 行程数据将在这里动态加载 -->
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                            <nav aria-label="Page navigation">
+                                                <ul id="itineraries-pagination" class="pagination">
+                                                    <!-- 分页按钮将在这里动态生成 -->
+                                                </ul>
+                                            </nav>
+                                        </div>
+
+                                        <div id="no-itineraries" class="empty-state">
+                                            <i class='bx bx-calendar'></i>
+                                            <h4>暂无近期行程</h4>
+                                            <p>您还没有创建任何行程，点击行程安排添加新的行程。</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 路线管理 -->
+                            <div class="tab-pane fade" id="routes-tab">
+                                <div class="dashboard-title">
+                                    <h2>路线管理</h2>
+                                </div>
+
+                                <div class="route-management">
+                                    <div class="route-tools">
+                                        <div class="row align-items-center">
+                                            <div class="col-md-6">
+                                                <label for="route-select" class="form-label">选择路线</label>
+                                                <select class="form-select" id="route-select">
+                                                    <option value="new">创建新线路</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-6 text-end">
+                                                <button class="btn btn-primary" id="save-route">
+                                                    <i class='bx bx-save'></i> 保存路线
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="map-container">
+                                        <div class="input-group map-search">
+                                            <input type="text" id="map-search" class="form-control" placeholder="搜索地点...">
+                                            <button class="btn btn-secondary" type="button" id="search-btn">
+                                                <i class='bx bx-search'></i>
+                                            </button>
+                                        </div>
+                                        <div id="map"></div>
+                                    </div>
+
+                                    <div class="map-modes">
+                                        <button class="btn btn-outline-primary" id="view-mode">查看模式</button>
+                                        <button class="btn btn-outline-primary" id="edit-mode">线路编辑模式</button>
+                                        <button class="btn btn-outline-primary" id="itinerary-mode">行程管理模式</button>
+                                    </div>
+
+                                    <div class="row mt-3">
+                                        <div class="col-md-6">
+                                            <div class="route-points">
+                                                <h5>路线点列表</h5>
+                                                <div id="route-points-container">
+                                                    <!-- 路线点将在这里动态加载 -->
+                                                    <p class="text-center text-muted">此路线还没有添加景点</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="point-details" id="point-details">
+                                                <h5>景点详情</h5>
+                                                <form id="point-form">
+                                                    <div class="mb-3">
+                                                        <label for="point-name" class="form-label">景点名称</label>
+                                                        <input type="text" class="form-control" id="point-name" required>
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label for="point-description" class="form-label">景点描述</label>
+                                                        <textarea class="form-control" id="point-description" rows="3"></textarea>
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label class="form-label">坐标位置</label>
+                                                        <div class="row">
+                                                            <div class="col-md-6">
+                                                                <div class="input-group mb-2">
+                                                                    <span class="input-group-text">经度</span>
+                                                                    <span class="form-control" id="point-longitude"></span>
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-md-6">
+                                                                <div class="input-group mb-2">
+                                                                    <span class="input-group-text">纬度</span>
+                                                                    <span class="form-control" id="point-latitude"></span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="mb-3">
+                                                        <label class="form-label">已有图片</label>
+                                                        <div id="existing-images">
+                                                            <!-- 已有图片将在这里显示 -->
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="mb-3">
+                                                        <label for="point-images" class="form-label">上传新图片</label>
+                                                        <input type="file" class="filepond" id="point-images" name="images" multiple>
+                                                    </div>
+
+                                                    <div class="d-flex justify-content-between">
+                                                        <button type="button" class="btn btn-danger" id="delete-point">
+                                                            <i class='bx bx-trash'></i> 删除景点
+                                                        </button>
+                                                        <button type="submit" class="btn btn-primary">
+                                                            <i class='bx bx-save'></i> 保存
+                                                        </button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 导游管理 -->
+                            <div class="tab-pane fade" id="guides-tab">
+                                <div class="dashboard-title">
+                                    <h2>导游管理</h2>
+                                    <button class="btn btn-primary" id="hire-guide-btn">
+                                        <i class='bx bx-user-plus'></i> 选聘导游
+                                    </button>
+                                </div>
+
+                                <div class="table-responsive">
+                                    <table class="table custom-table">
+                                        <thead>
+                                            <tr>
+                                                <th>导游姓名</th>
+                                                <th>导游证号</th>
+                                                <th>联系电话</th>
+                                                <th>带团情况</th>
+                                                <th>好评率</th>
+                                                <th>被投诉次数</th>
+                                                <th>操作</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="guides-list">
+                                            <!-- 导游数据将在这里动态加载 -->
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <div id="no-guides" class="empty-state">
+                                    <i class='bx bx-user-pin'></i>
+                                    <h4>暂无导游数据</h4>
+                                    <p>您的旅行社还没有关联任何导游，可以邀请导游加入或选聘导游。</p>
+                                </div>
+                            </div>
+
+                            <!-- 预订管理 -->
+                            <div class="tab-pane fade" id="bookings-tab">
+                                <div class="dashboard-title">
+                                    <h2>预订管理</h2>
+                                </div>
+
+                                <ul class="nav nav-tabs" id="bookings-tabs">
+                                    <li class="nav-item">
+                                        <a class="nav-link active" data-bs-toggle="tab" href="#active-bookings">当前预订</a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link" data-bs-toggle="tab" href="#waiting-bookings">等待审核</a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link" data-bs-toggle="tab" href="#history-bookings">历史预订</a>
+                                    </li>
+                                </ul>
+
+                                <div class="tab-content">
+                                    <div class="tab-pane fade show active" id="active-bookings">
+                                        <div class="table-responsive">
+                                            <table class="table custom-table">
+                                                <thead>
+                                                    <tr>
+                                                        <th>游客姓名</th>
+                                                        <th>联系方式</th>
+                                                        <th>行程名称</th>
+                                                        <th>出发日期</th>
+                                                        <th>预订时间</th>
+                                                        <th>状态</th>
+                                                        <th>操作</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="active-bookings-list">
+                                                    <!-- 当前预订数据将在这里动态加载 -->
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                        <div id="no-active-bookings" class="empty-state">
+                                            <i class='bx bx-calendar-x'></i>
+                                            <h4>暂无当前预订</h4>
+                                            <p>目前没有活跃的预订记录。</p>
+                                        </div>
+                                    </div>
+
+                                    <div class="tab-pane fade" id="waiting-bookings">
+                                        <div class="table-responsive">
+                                            <table class="table custom-table">
+                                                <thead>
+                                                    <tr>
+                                                        <th>游客姓名</th>
+                                                        <th>联系方式</th>
+                                                        <th>行程名称</th>
+                                                        <th>出发日期</th>
+                                                        <th>预订理由</th>
+                                                        <th>状态</th>
+                                                        <th>操作</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="waiting-bookings-list">
+                                                    <!-- 等待审核的预订数据将在这里动态加载 -->
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                        <div id="no-waiting-bookings" class="empty-state">
+                                            <i class='bx bx-time'></i>
+                                            <h4>暂无待审核预订</h4>
+                                            <p>没有需要审核的预订申请。</p>
+                                        </div>
+                                    </div>
+
+                                    <div class="tab-pane fade" id="history-bookings">
+                                        <div class="table-responsive">
+                                            <table class="table custom-table">
+                                                <thead>
+                                                    <tr>
+                                                        <th>游客姓名</th>
+                                                        <th>联系方式</th>
+                                                        <th>行程名称</th>
+                                                        <th>出发日期</th>
+                                                        <th>预订时间</th>
+                                                        <th>状态</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="history-bookings-list">
+                                                    <!-- 历史预订数据将在这里动态加载 -->
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                        <div id="no-history-bookings" class="empty-state">
+                                            <i class='bx bx-history'></i>
+                                            <h4>暂无历史预订</h4>
+                                            <p>没有完成或取消的历史预订记录。</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 行程安排 -->
+                            <div class="tab-pane fade" id="itineraries-tab">
+                                <div class="dashboard-title">
+                                    <h2>行程安排</h2>
+                                    <button class="btn btn-primary" id="create-itinerary-btn">
+                                        <i class='bx bx-plus'></i> 新增行程
+                                    </button>
+                                </div>
+
+                                <div class="table-responsive">
+                                    <table class="table custom-table">
+                                        <thead>
+                                            <tr>
+                                                <th>行程名称</th>
+                                                <th>出发日期</th>
+                                                <th>导游</th>
+                                                <th>预订人数/上限</th>
+                                                <th>状态</th>
+                                                <th>操作</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="itineraries-table">
+                                            <!-- 行程数据将在这里动态加载 -->
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <div id="no-itineraries-data" class="empty-state">
+                                    <i class='bx bx-trip'></i>
+                                    <h4>暂无行程数据</h4>
+                                    <p>您还没有创建任何行程，点击"新增行程"按钮添加。</p>
+                                </div>
+                            </div>
+
+                            <!-- 通知 (原投诉处理) -->
+                            <div class="tab-pane fade" id="notifications-tab">
+                                <div class="dashboard-title">
+                                    <h2>通知与消息</h2>
+                                </div>
+
+                                <div class="chat-container">
+                                    <div class="chat-sidebar">
+                                        <div class="chat-sidebar-header">
+                                            <h5>联系人</h5>
+                                            <div class="input-group mt-2">
+                                                <input type="text" class="form-control" placeholder="搜索...">
+                                                <button class="btn btn-outline-secondary" type="button">
+                                                    <i class='bx bx-search'></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div class="chat-contacts">
+                                            <div class="chat-contact active">
+                                                <img src="/static/images/group-avatar.jpg" class="chat-contact-avatar" alt="群组头像">
+                                                <div class="chat-contact-info">
+                                                    <div class="chat-contact-name">
+                                                        <span>旅游行业交流群</span>
+                                                        <span class="unread-badge">3</span>
+                                                    </div>
+                                                    <div class="chat-contact-preview">文旅局: 关于最新旅游安全规定的通知</div>
+                                                </div>
+                                            </div>
+                                            <!-- 其他联系人将在这里动态加载 -->
+                                        </div>
+                                    </div>
+                                    <div class="chat-main">
+                                        <div class="chat-header">
+                                            <img src="/static/images/group-avatar.jpg" class="chat-header-avatar" alt="群组头像">
+                                            <div class="chat-header-info">
+                                                <div class="chat-header-name">旅游行业交流群</div>
+                                                <div class="chat-header-status">文旅局，3个旅行社</div>
+                                            </div>
+                                            <div class="chat-header-actions">
+                                                <button class="btn btn-sm btn-outline-secondary">
+                                                    <i class='bx bx-info-circle'></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div class="chat-messages">
+                                            <div class="chat-message received">
+                                                <div>大家好，这是文旅局发布的最新旅游安全规定，请各旅行社遵照执行。</div>
+                                                <span class="chat-message-time">10:30</span>
+                                            </div>
+                                            <div class="chat-message sent">
+                                                <div>收到，我们会严格执行。</div>
+                                                <span class="chat-message-time">10:35</span>
+                                            </div>
+                                            <!-- 其他消息将在这里动态加载 -->
+                                        </div>
+                                        <div class="chat-form">
+                                            <input type="text" class="chat-input" placeholder="输入消息...">
+                                            <button class="send-btn">
+                                                <i class='bx bx-send'></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 统计分析 -->
+                            <div class="tab-pane fade" id="statistics-tab">
+                                <div class="dashboard-title">
+                                    <h2>统计分析</h2>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="card mb-4">
+                                            <div class="card-header">
+                                                月度预订统计
+                                            </div>
+                                            <div class="card-body">
+                                                <canvas id="bookings-chart" height="300"></canvas>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="card mb-4">
+                                            <div class="card-header">
+                                                热门路线排行
+                                            </div>
+                                            <div class="card-body">
+                                                <canvas id="routes-chart" height="300"></canvas>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div class="card">
+                                            <div class="card-header">
+                                                收入趋势分析
+                                            </div>
+                                            <div class="card-body">
+                                                <canvas id="revenue-chart" height="250"></canvas>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 个人设置模态框 -->
+<div class="modal fade" id="settingsModal" tabindex="-1" aria-labelledby="settingsModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="settingsModalLabel">个人设置</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row">
+          <div class="col-md-4 text-center">
+            <img src="/static/images/default-avatar.png" id="profileImage" class="img-fluid rounded-circle mb-3" style="width: 150px; height: 150px; object-fit: cover;">
+            <div class="mb-3">
+              <input type="file" id="profileImageUpload" accept="image/*" style="display: none;">
+              <button type="button" class="btn btn-outline-primary" id="changePhotoBtn">更改头像</button>
+            </div>
+          </div>
+          <div class="col-md-8">
+            <form id="profileForm">
+              {% csrf_token %}
+              <div class="mb-3">
+                <label for="username" class="form-label">用户名</label>
+                <input type="text" class="form-control" id="username" name="username">
+              </div>
+              <div class="mb-3">
+                <label for="email" class="form-label">邮箱</label>
+                <input type="email" class="form-control" id="email" name="email">
+              </div>
+              <div class="mb-3">
+                <label for="phone" class="form-label">电话</label>
+                <input type="tel" class="form-control" id="phone" name="phone">
+              </div>
+              <div class="mb-3">
+                <label for="agency_name" class="form-label">旅行社名称</label>
+                <input type="text" class="form-control" id="agency_name" name="agency_name">
+              </div>
+              <div class="mb-3">
+                <label for="license_number" class="form-label">营业执照号</label>
+                <input type="text" class="form-control" id="license_number" name="license_number">
+              </div>
+              <div class="mb-3">
+                <label for="address" class="form-label">地址</label>
+                <textarea class="form-control" id="address" name="address" rows="2"></textarea>
+              </div>
+              <hr>
+              <div class="mb-3">
+                <label for="current_password" class="form-label">当前密码</label>
+                <input type="password" class="form-control" id="current_password" name="current_password">
+              </div>
+              <div class="mb-3">
+                <label for="new_password" class="form-label">新密码 (不修改请留空)</label>
+                <input type="password" class="form-control" id="new_password" name="new_password">
+              </div>
+              <div class="mb-3">
+                <label for="confirm_password" class="form-label">确认新密码</label>
+                <input type="password" class="form-control" id="confirm_password" name="confirm_password">
+              </div>
+              <div id="passwordError" class="text-danger" style="display:none;">两次输入的密码不匹配</div>
+            </form>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+        <button type="button" class="btn btn-primary" id="saveProfileBtn">保存</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 选聘导游模态框 -->
+<div class="modal fade" id="hireGuideModal" tabindex="-1" aria-labelledby="hireGuideModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="hireGuideModalLabel">选聘导游</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="table-responsive">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>导游姓名</th>
+                <th>导游证号</th>
+                <th>联系电话</th>
+                <th>电子邮箱</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody id="available-guides-list">
+              <!-- 可聘导游列表将在这里加载 -->
+            </tbody>
+          </table>
+        </div>
+        <div id="no-available-guides" class="text-center p-4 text-muted">
+          <i class='bx bx-search' style="font-size: 3rem;"></i>
+          <p class="mt-2">暂无可聘请的导游</p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 设置导游工资模态框 -->
+<div class="modal fade" id="setGuideWageModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">设置导游工资</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="guide-wage-form">
+          {% csrf_token %}
+          <input type="hidden" id="guide-id-for-wage">
+          <div class="mb-3">
+            <label for="guide-name" class="form-label">导游姓名</label>
+            <input type="text" class="form-control" id="guide-name" readonly>
+          </div>
+          <div class="mb-3">
+            <label for="base-wage" class="form-label">基本工资 (¥/月)</label>
+            <input type="number" class="form-control" id="base-wage" required min="0">
+          </div>
+          <div class="mb-3">
+            <label for="bonus-per-tour" class="form-label">每团奖金 (¥/团)</label>
+            <input type="number" class="form-control" id="bonus-per-tour" required min="0">
+          </div>
+          <div class="mb-3">
+            <label for="commission-percentage" class="form-label">提成比例 (%)</label>
+            <input type="number" class="form-control" id="commission-percentage" required min="0" max="100">
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+        <button type="button" class="btn btn-primary" id="save-guide-wage">保存</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 查看导游详情模态框 -->
+<div class="modal fade" id="viewGuideModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">导游详情</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row">
+          <div class="col-md-4">
+            <img src="/static/images/default-avatar.png" id="guide-profile-image" class="img-fluid rounded-circle mb-3" style="width: 150px; height: 150px; object-fit: cover;">
+            <h5 id="view-guide-name">导游姓名</h5>
+            <p id="view-guide-id">导游证号: </p>
+            <p><i class='bx bx-phone'></i> <span id="view-guide-phone"></span></p>
+            <p><i class='bx bx-envelope'></i> <span id="view-guide-email"></span></p>
+          </div>
+          <div class="col-md-8">
+            <h6 class="border-bottom pb-2">工作情况</h6>
+            <div class="row mb-3">
+              <div class="col-6">
+                <small class="text-muted">带团总数</small>
+                <p class="mb-0" id="view-guide-tours-count">0</p>
+              </div>
+              <div class="col-6">
+                <small class="text-muted">好评率</small>
+                <p class="mb-0" id="view-guide-rating">0%</p>
+              </div>
+            </div>
+            <div class="row mb-3">
+              <div class="col-6">
+                <small class="text-muted">投诉次数</small>
+                <p class="mb-0" id="view-guide-complaints">0</p>
+              </div>
+              <div class="col-6">
+                <small class="text-muted">入职时间</small>
+                <p class="mb-0" id="view-guide-join-date">2023-01-01</p>
+              </div>
+            </div>
+
+            <h6 class="border-bottom pb-2 mt-4">近期行程</h6>
+            <div class="table-responsive">
+              <table class="table table-sm">
+                <thead>
+                  <tr>
+                    <th>行程名称</th>
+                    <th>出发日期</th>
+                    <th>状态</th>
+                  </tr>
+                </thead>
+                <tbody id="view-guide-itineraries">
+                  <!-- 导游行程将在这里动态加载 -->
+                </tbody>
+              </table>
+              <p id="view-guide-no-itineraries" class="text-center text-muted">暂无近期行程</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 新增/编辑行程模态框 -->
+<div class="modal fade" id="itineraryModal" tabindex="-1" aria-labelledby="itineraryModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="itineraryModalLabel">新增行程</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="itinerary-form">
+          {% csrf_token %}
+          <input type="hidden" id="itinerary-id" value="">
+          <div class="row">
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="itinerary-name" class="form-label">行程名称</label>
+                <input type="text" class="form-control" id="itinerary-name" required>
+              </div>
+              <div class="mb-3">
+                <label for="itinerary-route" class="form-label">选择路线</label>
+                <select class="form-select" id="itinerary-route" required>
+                  <option value="">请选择路线</option>
+                </select>
+              </div>
+              <div class="mb-3">
+                <label for="itinerary-start-date" class="form-label">出发日期</label>
+                <input type="date" class="form-control" id="itinerary-start-date" required>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="itinerary-guide" class="form-label">选择导游</label>
+                <select class="form-select" id="itinerary-guide">
+                  <option value="">请选择导游</option>
+                </select>
+              </div>
+              <div class="mb-3">
+                <label for="itinerary-max-tourists" class="form-label">最大游客数量</label>
+                <input type="number" class="form-control" id="itinerary-max-tourists" value="20" min="1" required>
+              </div>
+              <div class="mb-3">
+                <label for="itinerary-price" class="form-label">价格 (¥/人)</label>
+                <input type="number" class="form-control" id="itinerary-price" value="0" min="0" required>
+              </div>
+            </div>
+          </div>
+          <div class="mb-3">
+            <label for="itinerary-description" class="form-label">行程描述</label>
+            <textarea class="form-control" id="itinerary-description" rows="3"></textarea>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+        <button type="button" class="btn btn-primary" id="save-itinerary">保存行程</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 查看游客信息模态框 -->
+<div class="modal fade" id="viewTouristModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">游客信息</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="text-center mb-4">
+          <img src="/static/images/default-avatar.png" id="tourist-profile-image" class="rounded-circle" width="100" height="100">
+          <h5 class="mt-3" id="view-tourist-name">游客姓名</h5>
+        </div>
+        <div class="row">
+          <div class="col-md-6">
+            <p><strong>手机号码:</strong> <span id="view-tourist-phone"></span></p>
+            <p><strong>电子邮箱:</strong> <span id="view-tourist-email"></span></p>
+          </div>
+          <div class="col-md-6">
+            <p><strong>注册时间:</strong> <span id="view-tourist-registered"></span></p>
+            <p><strong>预订次数:</strong> <span id="view-tourist-bookings"></span></p>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+        <button type="button" class="btn btn-primary" id="contact-tourist">发送消息</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<!-- 引入高德地图 API -->
+<script src="https://webapi.amap.com/maps?v=2.0&key=YOUR_AMAP_KEY"></script>
+<script src="https://webapi.amap.com/ui/1.1/main.js"></script>
+
+<!-- 引入 Chart.js 图表库 -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<!-- 引入 FilePond 文件上传库 -->
+<script src="https://cdn.jsdelivr.net/npm/filepond-plugin-image-preview@4.6.11/dist/filepond-plugin-image-preview.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/filepond@4.30.4/dist/filepond.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/filepond-plugin-file-encode@2.1.10/dist/filepond-plugin-file-encode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/filepond-plugin-image-transform@3.8.7/dist/filepond-plugin-image-transform.min.js"></script>
+
+<script>
+// 全局变量
+let map;
+let currentMapMode = 'view';
+let mapClickListener;
+let currentRoute = null;
+let currentRoutePoints = [];
+let currentPoint = null;
+let markers = [];
+let polylines = [];
+const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+// 初始化函数 - 页面加载完成后执行
+document.addEventListener('DOMContentLoaded', function() {
+    // 初始化侧边栏活跃状态
+    initSidebar();
+
+    // 初始化个人设置功能
+    initProfileSettings();
+
+    // 加载仪表盘数据
+    loadDashboardData();
+
+    // 监听标签页切换事件
+    document.querySelectorAll('.sidebar-menu a[data-bs-toggle="tab"]').forEach(tab => {
+        tab.addEventListener('shown.bs.tab', function(e) {
+            // 根据激活的标签页初始化相应功能
+            const targetId = e.target.getAttribute('href');
+
+            // 首次加载标签页时初始化相应功能
+            if (targetId === '#routes-tab') {
+                // 检查是否已经初始化
+                if (!window.routesInitialized) {
+                    initRoutesTab();
+                    window.routesInitialized = true;
+                }
+            } else if (targetId === '#guides-tab') {
+                if (!window.guidesInitialized) {
+                    loadGuidesData();
+                    window.guidesInitialized = true;
+                }
+            } else if (targetId === '#bookings-tab') {
+                if (!window.bookingsInitialized) {
+                    loadBookingsData();
+                    window.bookingsInitialized = true;
+                }
+            } else if (targetId === '#itineraries-tab') {
+                if (!window.itinerariesInitialized) {
+                    loadItinerariesData();
+                    window.itinerariesInitialized = true;
+                }
+            } else if (targetId === '#notifications-tab') {
+                if (!window.notificationsInitialized) {
+                    initChatInterface();
+                    window.notificationsInitialized = true;
+                }
+            } else if (targetId === '#statistics-tab') {
+                if (!window.statisticsInitialized) {
+                    initStatisticsCharts();
+                    window.statisticsInitialized = true;
+                }
+            }
+        });
+    });
+});
+
+// 初始化侧边栏
+function initSidebar() {
+    const sidebarLinks = document.querySelectorAll('.sidebar-menu a');
+    sidebarLinks.forEach(link => {
+        link.addEventListener('click', function() {
+            sidebarLinks.forEach(l => l.classList.remove('active'));
+            this.classList.add('active');
+        });
+    });
+}
+
+// 初始化个人设置功能
+function initProfileSettings() {
+    const settingsModal = new bootstrap.Modal(document.getElementById('settingsModal'));
+    const showSettingsBtn = document.getElementById('showSettingsModal');
+    const saveProfileBtn = document.getElementById('saveProfileBtn');
+    const profileForm = document.getElementById('profileForm');
+    const newPassword = document.getElementById('new_password');
+    const confirmPassword = document.getElementById('confirm_password');
+    const passwordError = document.getElementById('passwordError');
+    const changePhotoBtn = document.getElementById('changePhotoBtn');
+    const profileImageUpload = document.getElementById('profileImageUpload');
+    const profileImage = document.getElementById('profileImage');
+    const navbarProfileImage = document.getElementById('navbarProfileImage');
+
+    // 显示设置模态框
+    showSettingsBtn.addEventListener('click', function() {
+        // 加载用户信息
+        fetch('/api/profile/')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const profile = data.profile;
+                    document.getElementById('username').value = profile.username;
+                    document.getElementById('email').value = profile.email;
+                    document.getElementById('phone').value = profile.phone;
+                    document.getElementById('agency_name').value = profile.agency_name || '';
+                    document.getElementById('license_number').value = profile.license_number || '';
+                    document.getElementById('address').value = profile.address || '';
+
+                    // 显示用户头像
+                    if (profile.profile_image) {
+                        profileImage.src = profile.profile_image;
+                        navbarProfileImage.src = profile.profile_image;
+                    }
+                }
+            })
+            .catch(error => console.error('Error loading profile:', error));
+
+        settingsModal.show();
+    });
+
+    // 上传头像
+    changePhotoBtn.addEventListener('click', function() {
+        profileImageUpload.click();
+    });
+
+    profileImageUpload.addEventListener('change', function() {
+        if (this.files && this.files[0]) {
+            const formData = new FormData();
+            formData.append('profile_image', this.files[0]);
+
+            // 上传图片
+            fetch('/api/profile/upload-image/', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrfToken
+                },
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // 更新显示的图像
+                    profileImage.src = data.image_url;
+                    navbarProfileImage.src = data.image_url;
+                } else {
+                    alert(data.error || '图片上传失败');
+                }
+            })
+            .catch(error => {
+                console.error('Error uploading image:', error);
+                alert('图片上传失败，请稍后再试');
+            });
+        }
+    });
+
+    // 保存设置
+    saveProfileBtn.addEventListener('click', function() {
+        // 验证密码一致性
+        if (newPassword.value && newPassword.value !== confirmPassword.value) {
+            passwordError.style.display = 'block';
+            return;
+        } else {
+            passwordError.style.display = 'none';
+        }
+
+        // 收集表单数据
+        const formData = {
+            username: document.getElementById('username').value,
+            email: document.getElementById('email').value,
+            phone: document.getElementById('phone').value,
+            agency_name: document.getElementById('agency_name').value,
+            license_number: document.getElementById('license_number').value,
+            address: document.getElementById('address').value
+        };
+
+        // 添加密码更新数据（如果有）
+        const currentPassword = document.getElementById('current_password').value;
+        if (currentPassword && newPassword.value) {
+            formData.current_password = currentPassword;
+            formData.new_password = newPassword.value;
+        }
+
+        // 提交更新
+        fetch('/api/profile/update/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify(formData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // 显示成功消息
+                alert('个人信息已成功更新');
+                settingsModal.hide();
+
+                // 更新导航栏中的用户名
+                if (formData.username) {
+                    document.querySelector('#userDropdown span').textContent = formData.username;
+                }
+
+                // 如果修改了密码，清空密码字段
+                document.getElementById('current_password').value = '';
+                newPassword.value = '';
+                confirmPassword.value = '';
+            } else {
+                alert(data.error || '更新失败');
+            }
+        })
+        .catch(error => {
+            console.error('Error updating profile:', error);
+            alert('更新失败，请稍后再试');
+        });
+    });
+}
+
+// 总览功能实现
+function loadDashboardData() {
+    // 加载仪表盘统计数据
+    fetch('/api/agency/dashboard/stats/')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // 更新统计卡片数据
+                document.getElementById('routes-count').textContent = data.stats.routes_count;
+                document.getElementById('guides-count').textContent = data.stats.guides_count;
+                document.getElementById('bookings-count').textContent = data.stats.bookings_count;
+                document.getElementById('revenue-total').textContent = `¥${data.stats.revenue_total}`;
+
+                // 为卡片添加点击事件
+                document.getElementById('guides-card').addEventListener('click', showGuidesDetail);
+                document.getElementById('bookings-card').addEventListener('click', showBookingsDetail);
+                document.getElementById('revenue-card').addEventListener('click', showRevenueDetail);
+            }
+        })
+        .catch(error => console.error('Error loading dashboard stats:', error));
+
+    // 加载近期行程
+    loadRecentItineraries();
+}
+
+// 显示导游详细信息
+function showGuidesDetail() {
+    // 切换到导游管理标签页
+    document.querySelector('.sidebar-menu a[href="#guides-tab"]').click();
+
+    // 加载导游详细数据
+    loadGuidesData();
+}
+
+// 显示预订详细信息
+function showBookingsDetail() {
+    // 切换到预订管理标签页
+    document.querySelector('.sidebar-menu a[href="#bookings-tab"]').click();
+
+    // 加载预订详细数据
+    loadBookingsData();
+}
+
+// 显示收入详细信息
+function showRevenueDetail() {
+    // 创建并显示收入详情模态框
+    const modalHtml = `
+    <div class="modal fade" id="revenueDetailModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">收入详情</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <div class="table-responsive">
+              <table class="table custom-table">
+                <thead>
+                  <tr>
+                    <th>行程名称</th>
+                    <th>出发日期</th>
+                    <th>单价 (¥)</th>
+                    <th>预订人数</th>
+                    <th>收入 (¥)</th>
+                  </tr>
+                </thead>
+                <tbody id="revenue-detail-body">
+                  <!-- 数据将动态加载 -->
+                </tbody>
+                <tfoot>
+                  <tr>
+                    <th colspan="4" class="text-end">总计</th>
+                    <th id="total-revenue"></th>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    `;
+
+    // 如果模态框已存在则移除
+    const existingModal = document.getElementById('revenueDetailModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+
+    // 添加模态框到页面
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+    // 加载收入数据
+    fetch('/api/agency/revenue/detail/')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const tbody = document.getElementById('revenue-detail-body');
+                tbody.innerHTML = '';
+
+                let totalRevenue = 0;
+
+                data.revenue.forEach(item => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${item.itinerary_name}</td>
+                        <td>${item.start_date}</td>
+                        <td>${item.price}</td>
+                        <td>${item.bookings_count}</td>
+                        <td>${item.revenue}</td>
+                    `;
+                    tbody.appendChild(row);
+
+                    totalRevenue += item.revenue;
+                });
+
+                document.getElementById('total-revenue').textContent = totalRevenue;
+
+                // 显示模态框
+                const modal = new bootstrap.Modal(document.getElementById('revenueDetailModal'));
+                modal.show();
+            }
+        })
+        .catch(error => console.error('Error loading revenue detail:', error));
+}
+
+// 加载近期行程
+function loadRecentItineraries(page = 1) {
+    fetch(`/api/agency/itineraries/?page=${page}&limit=5`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const itinerariesList = document.getElementById('itineraries-list');
+                const paginationElement = document.getElementById('itineraries-pagination');
+
+                if (data.itineraries.length > 0) {
+                    // 显示行程数据
+                    document.getElementById('recent-itineraries').style.display = 'block';
+                    document.getElementById('no-itineraries').style.display = 'none';
+
+                    itinerariesList.innerHTML = '';
+                    data.itineraries.forEach(itinerary => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${itinerary.name}</td>
+                            <td>${itinerary.start_date}</td>
+                            <td>${itinerary.guide || '未分配'}</td>
+                            <td>${itinerary.bookings_count}/${itinerary.max_tourists}</td>
+                            <td><span class="badge ${getStatusBadgeClass(itinerary.status)}">${getStatusText(itinerary.status)}</span></td>
+                        `;
+                        itinerariesList.appendChild(row);
+                    });
+
+                    // 创建分页控件
+                    paginationElement.innerHTML = '';
+                    if (data.total_pages > 1) {
+                        // 上一页按钮
+                        const prevLi = document.createElement('li');
+                        prevLi.className = `page-item ${page === 1 ? 'disabled' : ''}`;
+                        prevLi.innerHTML = `<a class="page-link" href="#" data-page="${page-1}">&laquo;</a>`;
+                        paginationElement.appendChild(prevLi);
+
+                        // 页码按钮
+                        for (let i = 1; i <= data.total_pages; i++) {
+                            const li = document.createElement('li');
+                            li.className = `page-item ${i === page ? 'active' : ''}`;
+                            li.innerHTML = `<a class="page-link" href="#" data-page="${i}">${i}</a>`;
+                            paginationElement.appendChild(li);
+                        }
+
+                        // 下一页按钮
+                        const nextLi = document.createElement('li');
+                        nextLi.className = `page-item ${page === data.total_pages ? 'disabled' : ''}`;
+                        nextLi.innerHTML = `<a class="page-link" href="#" data-page="${page+1}">&raquo;</a>`;
+                        paginationElement.appendChild(nextLi);
+
+                        // 添加分页点击事件
+                        paginationElement.querySelectorAll('.page-link').forEach(link => {
+                            link.addEventListener('click', function(e) {
+                                e.preventDefault();
+                                if (!this.parentElement.classList.contains('disabled')) {
+                                    const pageNum = parseInt(this.getAttribute('data-page'));
+                                    loadRecentItineraries(pageNum);
+                                }
+                            });
+                        });
+                    }
+                } else {
+                    // 无行程数据
+                    document.getElementById('recent-itineraries').style.display = 'none';
+                    document.getElementById('no-itineraries').style.display = 'block';
+                }
+            }
+        })
+        .catch(error => console.error('Error loading recent itineraries:', error));
+}
+
+// 加载导游数据
+function loadGuidesData() {
+    fetch('/api/agency/guides/detail/')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const guidesList = document.getElementById('guides-list');
+
+                if (data.guides.length > 0) {
+                    document.getElementById('no-guides').style.display = 'none';
+                    guidesList.innerHTML = '';
+
+                    data.guides.forEach(guide => {
+                        const currentItinerary = guide.current_itineraries.length > 0
+                            ? `${guide.current_itineraries[0].name} (${guide.current_itineraries[0].start_date})`
+                            : '无';
+
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${guide.name}</td>
+                            <td>${guide.guide_id}</td>
+                            <td>${guide.phone}</td>
+                            <td>${currentItinerary}</td>
+                            <td>${guide.rating}分</td>
+                            <td>${guide.complaints_count}</td>
+                            <td>
+                                <button type="button" class="btn btn-sm btn-outline-info view-guide" data-id="${guide.id}">
+                                    <i class='bx bx-show'></i> 查看
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-primary set-wage" data-id="${guide.id}" data-name="${guide.name}">
+                                    <i class='bx bx-dollar'></i> 工资
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-danger dismiss-guide" data-id="${guide.id}" data-name="${guide.name}">
+                                    <i class='bx bx-user-x'></i> 开除
+                                </button>
+                            </td>
+                        `;
+                        guidesList.appendChild(row);
+                    });
+
+                    // 添加按钮事件
+                    guidesList.querySelectorAll('.view-guide').forEach(btn => {
+                        btn.addEventListener('click', function() {
+                            const guideId = this.getAttribute('data-id');
+                            viewGuideDetails(guideId);
+                        });
+                    });
+
+                    guidesList.querySelectorAll('.set-wage').forEach(btn => {
+                        btn.addEventListener('click', function() {
+                            const guideId = this.getAttribute('data-id');
+                            const guideName = this.getAttribute('data-name');
+                            showSetWageModal(guideId, guideName);
+                        });
+                    });
+
+                    guidesList.querySelectorAll('.dismiss-guide').forEach(btn => {
+                        btn.addEventListener('click', function() {
+                            const guideId = this.getAttribute('data-id');
+                            const guideName = this.getAttribute('data-name');
+                            if (confirm(`确定要开除导游 ${guideName} 吗？`)) {
+                                dismissGuide(guideId);
+                            }
+                        });
+                    });
+                } else {
+                    document.getElementById('no-guides').style.display = 'block';
+                    guidesList.innerHTML = '';
+                }
+
+                // 初始化选聘导游按钮事件
+                document.getElementById('hire-guide-btn').addEventListener('click', showHireGuideModal);
+            }
+        })
+        .catch(error => console.error('Error loading guides data:', error));
+}
+
+// 路线管理功能
+function initRoutesTab() {
+    // 初始化 FilePond 图片上传
+    FilePond.registerPlugin(
+        FilePondPluginImagePreview,
+        FilePondPluginFileEncode,
+        FilePondPluginImageTransform
+    );
+
+    const pond = FilePond.create(document.getElementById('point-images'), {
+        allowMultiple: true,
+        acceptedFileTypes: ['image/*'],
+        labelIdle: '拖放图片或 <span class="filepond--label-action">浏览</span>',
+        server: {
+            process: (fieldName, file, metadata, load, error, progress, abort, transfer, options) => {
+                // 模拟上传过程
+                const controller = new AbortController();
+                progress(0, 100);
+
+                setTimeout(() => {
+                    progress(50, 100);
+                    setTimeout(() => {
+                        progress(100, 100);
+                        load('success');
+                    }, 500);
+                }, 500);
+
+                return {
+                    abort: () => {
+                        controller.abort();
+                        abort();
+                    }
+                };
+            }
+        }
+    });
+
+    // 初始化地图
+    AMapLoader.load({
+        key: "YOUR_AMAP_KEY",
+        version: "2.0",
+        plugins: ['AMap.ToolBar', 'AMap.Scale', 'AMap.Geocoder', 'AMap.Autocomplete', 'AMap.PlaceSearch']
+    }).then((AMap) => {
+        // 创建地图实例
+        map = new AMap.Map('map', {
+            zoom: 12,
+            center: [116.39, 39.9]  // 北京
+        });
+
+        // 添加缩放控件
+        map.addControl(new AMap.ToolBar());
+
+        // 添加比例尺控件
+        map.addControl(new AMap.Scale());
+
+        // 鼠标位置显示
+        map.on('mousemove', function(e) {
+            const lng = e.lnglat.getLng().toFixed(6);
+            const lat = e.lnglat.getLat().toFixed(6);
+            document.getElementById('map').title = `经度: ${lng}, 纬度: ${lat}`;
+        });
+
+        // 初始化搜索功能
+        const autoOptions = {
+            input: 'map-search'
+        };
+        const auto = new AMap.Autocomplete(autoOptions);
+        const placeSearch = new AMap.PlaceSearch({
+            map: map
+        });
+
+        // 绑定搜索事件
+        AMap.event.addListener(auto, 'select', function(e) {
+            placeSearch.setCity(e.poi.adcode);
+            placeSearch.search(e.poi.name);
+        });
+
+        // 默认设为查看模式
+        setMapMode('view');
+
+        // 加载路线列表
+        loadRoutesList();
+
+        // 添加模式切换事件
+        document.getElementById('view-mode').addEventListener('click', function() {
+            setMapMode('view');
+        });
+
+        document.getElementById('edit-mode').addEventListener('click', function() {
+            setMapMode('edit');
+        });
+
+        document.getElementById('itinerary-mode').addEventListener('click', function() {
+            setMapMode('itinerary');
+        });
+
+        // 添加路线选择变化事件
+        document.getElementById('route-select').addEventListener('change', function() {
+            const routeId = this.value;
+
+            if (routeId === 'new') {
+                // 创建新路线
+                createNewRoute();
+            } else {
+                // 加载现有路线
+                loadRouteDetails(routeId);
+            }
+        });
+
+        // 添加保存路线按钮事件
+        document.getElementById('save-route').addEventListener('click', saveRoute);
+
+        // 添加点详情表单提交事件
+        document.getElementById('point-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            savePointDetails();
+        });
+
+        // 添加删除点按钮事件
+        document.getElementById('delete-point').addEventListener('click', deleteCurrentPoint);
+    }).catch(e => {
+        console.error('高德地图加载失败', e);
+    });
+}
+
+// 设置地图模式
+// 设置地图模式
+function setMapMode(mode) {
+    currentMapMode = mode;
+
+    // 移除所有按钮的活跃状态
+    document.getElementById('view-mode').classList.remove('btn-primary', 'btn-outline-primary');
+    document.getElementById('edit-mode').classList.remove('btn-primary', 'btn-outline-primary');
+    document.getElementById('itinerary-mode').classList.remove('btn-primary', 'btn-outline-primary');
+
+    document.getElementById('view-mode').classList.add('btn-outline-primary');
+    document.getElementById('edit-mode').classList.add('btn-outline-primary');
+    document.getElementById('itinerary-mode').classList.add('btn-outline-primary');
+
+    // 设置当前模式按钮为活跃
+    document.getElementById(`${mode}-mode`).classList.remove('btn-outline-primary');
+    document.getElementById(`${mode}-mode`).classList.add('btn-primary');
+
+    // 隐藏景点详情面板
+    document.getElementById('point-details').style.display = 'none';
+
+    // 根据模式设置地图行为
+    if (mode === 'view') {
+        // 清除地图点击事件
+        if (mapClickListener) {
+            AMap.event.removeListener(mapClickListener);
+            mapClickListener = null;
+        }
+
+        // 设置标记点击事件为显示信息
+        setMarkerClickToShowInfo();
+
+    } else if (mode === 'edit') {
+        // 添加地图点击事件来添加新点
+        if (mapClickListener) {
+            AMap.event.removeListener(mapClickListener);
+        }
+
+        mapClickListener = AMap.event.addListener(map, 'click', function(e) {
+            addNewPoint(e.lnglat.getLng(), e.lnglat.getLat());
+        });
+
+        // 设置标记点击事件为编辑信息
+        setMarkerClickToEdit();
+
+    } else if (mode === 'itinerary') {
+        // 清除地图点击事件
+        if (mapClickListener) {
+            AMap.event.removeListener(mapClickListener);
+            mapClickListener = null;
+        }
+
+        // 显示行程选择界面
+        showItinerarySelection();
+    }
+}
+
+// 加载路线列表
+function loadRoutesList() {
+    fetch('/api/agency/routes/')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const routeSelect = document.getElementById('route-select');
+
+                // 保留第一个"创建新线路"选项
+                routeSelect.innerHTML = '<option value="new">创建新线路</option>';
+
+                // 添加现有路线
+                data.routes.forEach(route => {
+                    const option = document.createElement('option');
+                    option.value = route.id;
+                    option.textContent = `${route.name} (${route.points_count}个景点)`;
+                    routeSelect.appendChild(option);
+                });
+            }
+        })
+        .catch(error => console.error('Error loading routes:', error));
+}
+
+// 创建新路线
+function createNewRoute() {
+    // 清空当前路线和点
+    currentRoute = null;
+    currentRoutePoints = [];
+
+    // 清空地图标记
+    clearMapMarkers();
+
+    // 隐藏点详情面板
+    document.getElementById('point-details').style.display = 'none';
+
+    // 清空路线点列表
+    document.getElementById('route-points-container').innerHTML = '<p class="text-center text-muted">此路线还没有添加景点</p>';
+
+    // 创建默认路线
+    fetch('/api/agency/routes/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
+        },
+        body: JSON.stringify({
+            name: `新路线 ${new Date().getTime()}`,  // 临时名称
+            description: '',
+            is_published: false
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // 保存新路线ID
+            currentRoute = data.route_id;
+            alert('已创建新路线，请在地图上点击添加景点');
+
+            // 切换到编辑模式
+            setMapMode('edit');
+        }
+    })
+    .catch(error => console.error('Error creating new route:', error));
+}
+
+// 加载路线详情
+function loadRouteDetails(routeId) {
+    fetch(`/api/agency/routes/${routeId}/`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // 保存当前路线
+                currentRoute = data.route.id;
+                currentRoutePoints = data.route.points;
+
+                // 清空地图标记
+                clearMapMarkers();
+
+                // 显示路线点
+                if (currentRoutePoints.length > 0) {
+                    // 添加所有点的标记
+                    const bounds = new AMap.Bounds();
+
+                    currentRoutePoints.forEach((point, index) => {
+                        // 添加标记
+                        const marker = addMapMarker(point.latitude, point.longitude, point.name, point.id);
+                        bounds.extend([point.longitude, point.latitude]);
+
+                        // 如果不是最后一个点，添加与下一个点的连线
+                        if (index < currentRoutePoints.length - 1) {
+                            const nextPoint = currentRoutePoints[index + 1];
+                            addMapPolyline(
+                                [point.longitude, point.latitude],
+                                [nextPoint.longitude, nextPoint.latitude]
+                            );
+                        }
+                    });
+
+                    // 调整地图视角以包含所有点
+                    map.setBounds(bounds);
+                }
+
+                // 更新路线点列表
+                updateRoutePointsList();
+
+                // 隐藏点详情面板
+                document.getElementById('point-details').style.display = 'none';
+            }
+        })
+        .catch(error => console.error('Error loading route details:', error));
+}
+
+// 添加地图标记
+function addMapMarker(lat, lng, title, id) {
+    const marker = new AMap.Marker({
+        position: new AMap.LngLat(lng, lat),
+        title: title,
+        extData: {
+            id: id
+        }
+    });
+
+    map.add(marker);
+    markers.push(marker);
+
+    return marker;
+}
+
+// 添加地图连线
+function addMapPolyline(startPoint, endPoint) {
+    const polyline = new AMap.Polyline({
+        path: [startPoint, endPoint],
+        isOutline: true,
+        outlineColor: '#ffeeff',
+        borderWeight: 1,
+        strokeColor: "#3366FF",
+        strokeOpacity: 1,
+        strokeWeight: 6,
+        strokeStyle: "solid"
+    });
+
+    map.add(polyline);
+    polylines.push(polyline);
+
+    return polyline;
+}
+
+// 清空地图标记
+function clearMapMarkers() {
+    // 清除所有标记
+    if (markers.length > 0) {
+        map.remove(markers);
+        markers = [];
+    }
+
+    // 清除所有线条
+    if (polylines.length > 0) {
+        map.remove(polylines);
+        polylines = [];
+    }
+}
+
+// 查找地图标记
+function findMapMarker(id) {
+    return markers.find(marker => marker.getExtData().id === id);
+}
+
+// 设置标记点击事件为显示信息
+function setMarkerClickToShowInfo() {
+    markers.forEach(marker => {
+        AMap.event.clearListeners(marker, 'click');
+
+        // 添加点击显示信息窗体事件
+        AMap.event.addListener(marker, 'click', function() {
+            const id = marker.getExtData().id;
+            const point = currentRoutePoints.find(p => p.id === id);
+
+            if (point) {
+                const info = [];
+                info.push(`<div><h4>${point.name}</h4>`);
+
+                if (point.description) {
+                    info.push(`<p>${point.description}</p>`);
+                }
+
+                if (point.images && point.images.length > 0) {
+                    const image = point.images[0];
+                    info.push(`<img src="${image.url}" style="width: 200px; margin-bottom: 10px;">`);
+                }
+
+                info.push(`<p>坐标：${point.longitude.toFixed(6)}, ${point.latitude.toFixed(6)}</p></div>`);
+
+                // 创建信息窗体
+                const infoWindow = new AMap.InfoWindow({
+                    content: info.join(""),
+                    offset: new AMap.Pixel(0, -30)
+                });
+
+                // 打开信息窗体
+                infoWindow.open(map, marker.getPosition());
+            }
+        });
+    });
+}
+
+// 设置标记点击事件为编辑
+function setMarkerClickToEdit() {
+    markers.forEach(marker => {
+        AMap.event.clearListeners(marker, 'click');
+
+        // 添加点击编辑事件
+        AMap.event.addListener(marker, 'click', function() {
+            const id = marker.getExtData().id;
+            const point = currentRoutePoints.find(p => p.id === id);
+
+            if (point) {
+                // 显示点详情面板
+                document.getElementById('point-details').style.display = 'block';
+                document.getElementById('point-name').value = point.name;
+                document.getElementById('point-description').value = point.description || '';
+                document.getElementById('point-longitude').textContent = point.longitude;
+                document.getElementById('point-latitude').textContent = point.latitude;
+
+                // 显示已有图片
+                const existingImages = document.getElementById('existing-images');
+                existingImages.innerHTML = '';
+
+                if (point.images && point.images.length > 0) {
+                    point.images.forEach(image => {
+                        const imgElement = document.createElement('div');
+                        imgElement.className = 'image-preview';
+                        imgElement.innerHTML = `
+                            <img src="${image.url}" alt="${point.name}">
+                            <span class="delete-image" data-id="${image.id}">
+                                <i class='bx bx-x'></i>
+                            </span>
+                        `;
+                        existingImages.appendChild(imgElement);
+                    });
+
+                    // 添加删除图片事件
+                    document.querySelectorAll('.delete-image').forEach(btn => {
+                        btn.addEventListener('click', function() {
+                            const imageId = this.getAttribute('data-id');
+                            deletePointImage(point.id, imageId);
+                        });
+                    });
+                }
+
+                // 设置当前点
+                currentPoint = point;
+            }
+        });
+    });
+}
+
+// 添加新景点
+function addNewPoint(lng, lat) {
+    if (!currentRoute) {
+        alert('请先创建或选择一个路线');
+        return;
+    }
+
+    // 添加临时标记
+    const markerId = `temp_${new Date().getTime()}`;
+    const marker = addMapMarker(lat, lng, '新景点', markerId);
+
+    // 如果有前一个点，添加连线
+    if (currentRoutePoints.length > 0) {
+        const lastPoint = currentRoutePoints[currentRoutePoints.length - 1];
+        addMapPolyline(
+            [lastPoint.longitude, lastPoint.latitude],
+            [lng, lat]
+        );
+    }
+
+    // 显示点详情面板进行编辑
+    document.getElementById('point-details').style.display = 'block';
+    document.getElementById('point-name').value = '新景点';
+    document.getElementById('point-description').value = '';
+    document.getElementById('point-longitude').textContent = lng;
+    document.getElementById('point-latitude').textContent = lat;
+    document.getElementById('existing-images').innerHTML = '';
+
+    // 重置FilePond上传组件
+    if (window.pointImagesUploader) {
+        window.pointImagesUploader.removeFiles();
+    }
+
+    // 保存临时点信息
+    currentPoint = {
+        isNew: true,
+        markerId: markerId,
+        longitude: lng,
+        latitude: lat
+    };
+}
+
+// 保存景点详情
+function savePointDetails() {
+    if (!currentRoute || !currentPoint) return;
+
+    const name = document.getElementById('point-name').value;
+    const description = document.getElementById('point-description').value;
+
+    if (!name) {
+        alert('请输入景点名称');
+        return;
+    }
+
+    if (currentPoint.isNew) {
+        // 创建新景点
+        fetch(`/api/agency/routes/${currentRoute}/points/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify({
+                name: name,
+                latitude: currentPoint.latitude,
+                longitude: currentPoint.longitude,
+                description: description
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // 更新临时标记
+                const markerObj = findMapMarker(currentPoint.markerId);
+                if (markerObj) {
+                    map.remove(markerObj);
+                    markers = markers.filter(m => m !== markerObj);
+                }
+
+                // 添加永久标记
+                addMapMarker(currentPoint.latitude, currentPoint.longitude, name, data.point_id);
+
+                // 添加到路线点列表
+                currentRoutePoints.push({
+                    id: data.point_id,
+                    name: name,
+                    latitude: currentPoint.latitude,
+                    longitude: currentPoint.longitude,
+                    description: description,
+                    order: data.order,
+                    images: []
+                });
+
+                // 更新路线点列表显示
+                updateRoutePointsList();
+
+                // 处理上传的图片
+                uploadPointImagesIfNeeded(data.point_id);
+            }
+        })
+        .catch(error => console.error('Error saving point:', error));
+    } else {
+        // 更新现有景点
+        fetch(`/api/agency/routes/${currentRoute}/points/${currentPoint.id}/`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify({
+                name: name,
+                description: description
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // 更新标记名称
+                const markerObj = findMapMarker(currentPoint.id);
+                if (markerObj) {
+                    markerObj.setTitle(name);
+                }
+
+                // 更新路线点列表中的名称
+                const pointIndex = currentRoutePoints.findIndex(p => p.id === currentPoint.id);
+                if (pointIndex !== -1) {
+                    currentRoutePoints[pointIndex].name = name;
+                    currentRoutePoints[pointIndex].description = description;
+                }
+
+                // 更新路线点列表显示
+                updateRoutePointsList();
+
+                // 处理上传的图片
+                uploadPointImagesIfNeeded(currentPoint.id);
+            }
+        })
+        .catch(error => console.error('Error updating point:', error));
+    }
+}
+
+// 如果有新图片，上传景点图片
+function uploadPointImagesIfNeeded(pointId) {
+    // 检查是否有文件需要上传
+    if (window.pointImagesUploader && window.pointImagesUploader.getFiles().length > 0) {
+        const files = window.pointImagesUploader.getFiles();
+        let uploadCount = 0;
+
+        // 显示上传进度
+        alert(`正在上传 ${files.length} 个图片，请稍候...`);
+
+        // 逐个上传文件
+        files.forEach(fileItem => {
+            if (fileItem.file) {
+                const formData = new FormData();
+                formData.append('image', fileItem.file);
+
+                fetch(`/api/agency/routes/${currentRoute}/points/${pointId}/images/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': csrfToken
+                    },
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        uploadCount++;
+
+                        // 如果是最后一个文件上传完成
+                        if (uploadCount === files.length) {
+                            alert('所有图片上传完成');
+
+                            // 重新加载路线详情以更新图片
+                            loadRouteDetails(currentRoute);
+
+                            // 隐藏点详情面板
+                            document.getElementById('point-details').style.display = 'none';
+                            currentPoint = null;
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error uploading image:', error);
+                    uploadCount++;
+
+                    // 如果是最后一个文件处理完成
+                    if (uploadCount === files.length) {
+                        alert('部分图片上传失败，请检查错误并重试');
+
+                        // 重新加载路线详情以更新图片
+                        loadRouteDetails(currentRoute);
+
+                        // 隐藏点详情面板
+                        document.getElementById('point-details').style.display = 'none';
+                        currentPoint = null;
+                    }
+                });
+            }
+        });
+    } else {
+        // 无图片需要上传，隐藏点详情面板
+        document.getElementById('point-details').style.display = 'none';
+        currentPoint = null;
+    }
+}
+
+// 删除景点图片
+function deletePointImage(pointId, imageId) {
+    if (!confirm('确定要删除此图片吗？')) return;
+
+    fetch(`/api/agency/routes/${currentRoute}/points/${pointId}/images/${imageId}/`, {
+        method: 'DELETE',
+        headers: {
+            'X-CSRFToken': csrfToken
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // 从DOM中移除图片元素
+            const imageElement = document.querySelector(`.delete-image[data-id="${imageId}"]`).parentElement;
+            imageElement.remove();
+
+            // 从currentRoutePoints中移除图片
+            const pointIndex = currentRoutePoints.findIndex(p => p.id === pointId);
+            if (pointIndex !== -1) {
+                const imageIndex = currentRoutePoints[pointIndex].images.findIndex(img => img.id === parseInt(imageId));
+                if (imageIndex !== -1) {
+                    currentRoutePoints[pointIndex].images.splice(imageIndex, 1);
+                }
+            }
+        }
+    })
+    .catch(error => console.error('Error deleting image:', error));
+}
+
+// 删除当前景点
+function deleteCurrentPoint() {
+    if (!currentRoute || !currentPoint || currentPoint.isNew) return;
+
+    if (!confirm('确定要删除此景点吗？')) return;
+
+    fetch(`/api/agency/routes/${currentRoute}/points/${currentPoint.id}/`, {
+        method: 'DELETE',
+        headers: {
+            'X-CSRFToken': csrfToken
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // 从currentRoutePoints中移除该点
+            const pointIndex = currentRoutePoints.findIndex(p => p.id === currentPoint.id);
+            if (pointIndex !== -1) {
+                currentRoutePoints.splice(pointIndex, 1);
+            }
+
+            // 重新加载路线以更新地图和列表
+            loadRouteDetails(currentRoute);
+
+            // 隐藏点详情面板
+            document.getElementById('point-details').style.display = 'none';
+            currentPoint = null;
+        }
+    })
+    .catch(error => console.error('Error deleting point:', error));
+}
+
+// 更新路线点列表
+function updateRoutePointsList() {
+    const container = document.getElementById('route-points-container');
+    container.innerHTML = '';
+
+    if (currentRoutePoints.length === 0) {
+        container.innerHTML = '<p class="text-center text-muted">此路线还没有添加景点</p>';
+        return;
+    }
+
+    currentRoutePoints.forEach((point, index) => {
+        const pointElement = document.createElement('div');
+        pointElement.className = 'route-point';
+        pointElement.innerHTML = `
+            <div class="point-number">${index + 1}</div>
+            <div class="point-info">
+                <div class="fw-bold">${point.name}</div>
+                <div class="text-muted small">${point.description || '无描述'}</div>
+            </div>
+            <div class="point-actions">
+                <button type="button" class="btn btn-sm btn-outline-primary view-point" data-id="${point.id}">
+                    <i class='bx bx-show'></i>
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-secondary edit-point" data-id="${point.id}">
+                    <i class='bx bx-edit'></i>
+                </button>
+            </div>
+        `;
+        container.appendChild(pointElement);
+
+        // 添加查看按钮事件
+        pointElement.querySelector('.view-point').addEventListener('click', function() {
+            // 查找对应点的标记并居中显示
+            const pointId = parseInt(this.getAttribute('data-id'));
+            const point = currentRoutePoints.find(p => p.id === pointId);
+
+            if (point) {
+                map.setCenter([point.longitude, point.latitude]);
+                map.setZoom(16);
+            }
+        });
+
+        // 添加编辑按钮事件
+        pointElement.querySelector('.edit-point').addEventListener('click', function() {
+            // 编辑该点
+            const pointId = parseInt(this.getAttribute('data-id'));
+            editPoint(pointId);
+        });
+    });
+}
+
+// 编辑景点
+function editPoint(pointId) {
+    // 切换到编辑模式
+    setMapMode('edit');
+
+    // 查找对应点
+    const point = currentRoutePoints.find(p => p.id === pointId);
+
+    if (point) {
+        // 设置当前点
+        currentPoint = point;
+
+        // 居中显示
+        map.setCenter([point.longitude, point.latitude]);
+        map.setZoom(16);
+
+        // 显示点详情面板
+        document.getElementById('point-details').style.display = 'block';
+        document.getElementById('point-name').value = point.name;
+        document.getElementById('point-description').value = point.description || '';
+        document.getElementById('point-longitude').textContent = point.longitude;
+        document.getElementById('point-latitude').textContent = point.latitude;
+
+        // 显示已有图片
+        const existingImages = document.getElementById('existing-images');
+        existingImages.innerHTML = '';
+
+        if (point.images && point.images.length > 0) {
+            point.images.forEach(image => {
+                const imgElement = document.createElement('div');
+                imgElement.className = 'image-preview';
+                imgElement.innerHTML = `
+                    <img src="${image.url}" alt="${point.name}">
+                    <span class="delete-image" data-id="${image.id}">
+                        <i class='bx bx-x'></i>
+                    </span>
+                `;
+                existingImages.appendChild(imgElement);
+            });
+
+            // 添加删除图片事件
+            document.querySelectorAll('.delete-image').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const imageId = this.getAttribute('data-id');
+                    deletePointImage(point.id, imageId);
+                });
+            });
+        }
+
+        // 重置FilePond上传组件
+        if (window.pointImagesUploader) {
+            window.pointImagesUploader.removeFiles();
+        }
+    }
+}
+
+// 保存路线
+function saveRoute() {
+    if (!currentRoute) return;
+
+    // 显示路线信息编辑对话框
+    const routeName = prompt('请输入路线名称:', currentRoutePoints.length > 0 ? `路线 (${currentRoutePoints.length}个景点)` : '新路线');
+
+    if (routeName !== null) {
+        fetch(`/api/agency/routes/${currentRoute}/`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify({
+                name: routeName,
+                is_published: true
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('路线保存成功！');
+                // 重新加载路线列表
+                loadRoutesList();
+            }
+        })
+        .catch(error => console.error('Error saving route:', error));
+    }
+}
+
+// 显示行程选择界面
+function showItinerarySelection() {
+    if (!currentRoute) {
+        alert('请先选择一个路线');
+        return;
+    }
+
+    // 创建行程选择对话框
+    if (!document.getElementById('itinerary-selection-modal')) {
+        const modalHtml = `
+        <div class="modal fade" id="itinerary-selection-modal" tabindex="-1" aria-hidden="true">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title">选择行程</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div class="modal-body">
+                <div class="mb-3">
+                  <label for="itinerary-select" class="form-label">行程</label>
+                  <select class="form-select" id="itinerary-select">
+                    <option value="">请选择行程</option>
+                  </select>
+                </div>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-primary" id="manage-itinerary-btn">管理行程</button>
+              </div>
+            </div>
+          </div>
+        </div>`;
+
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+        // 添加按钮点击事件
+        document.getElementById('manage-itinerary-btn').addEventListener('click', function() {
+            const itineraryId = document.getElementById('itinerary-select').value;
+
+            if (itineraryId) {
+                // 跳转到行程标签页并加载该行程
+                document.querySelector('.sidebar-menu a[href="#itineraries-tab"]').click();
+                loadItineraryDetails(itineraryId);
+
+                // 关闭对话框
+                bootstrap.Modal.getInstance(document.getElementById('itinerary-selection-modal')).hide();
+            } else {
+                alert('请选择行程');
+            }
+        });
+    }
+
+    // 加载行程列表
+    fetch('/api/agency/itineraries/')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const itinerarySelect = document.getElementById('itinerary-select');
+                itinerarySelect.innerHTML = '<option value="">请选择行程</option>';
+
+                data.itineraries.forEach(itinerary => {
+                    const option = document.createElement('option');
+                    option.value = itinerary.id;
+                    option.textContent = `${itinerary.name} (${itinerary.start_date})`;
+                    itinerarySelect.appendChild(option);
+                });
+
+                // 显示对话框
+                const modal = new bootstrap.Modal(document.getElementById('itinerary-selection-modal'));
+                modal.show();
+            }
+        })
+        .catch(error => console.error('Error loading itineraries:', error));
+}
+
+// 初始化FilePond上传组件
+function initFilePond() {
+    // 注册FilePond插件
+    FilePond.registerPlugin(
+        FilePondPluginImagePreview,
+        FilePondPluginFileEncode,
+        FilePondPluginImageTransform
+    );
+
+    // 创建上传实例
+    window.pointImagesUploader = FilePond.create(document.getElementById('point-images'), {
+        allowMultiple: true,
+        acceptedFileTypes: ['image/jpeg', 'image/png', 'image/gif'],
+        labelIdle: '拖放图片或 <span class="filepond--label-action">点击浏览</span>',
+        labelFileProcessing: '上传中',
+        labelFileProcessingComplete: '上传完成',
+        labelTapToCancel: '点击取消',
+        labelTapToRetry: '点击重试',
+        labelTapToUndo: '点击撤销'
+    });
+}
+
+// 路线管理标签页初始化
+function initRoutesTab() {
+    // 初始化地图
+    if (!map) {
+        map = new AMap.Map('map', {
+            zoom: 12,
+            center: [116.39, 39.9]  // 默认北京
+        });
+
+        // 添加缩放控件
+        map.plugin(['AMap.ToolBar'], function() {
+            map.addControl(new AMap.ToolBar());
+        });
+
+        // 添加比例尺控件
+        map.plugin(['AMap.Scale'], function() {
+            map.addControl(new AMap.Scale());
+        });
+
+        // 鼠标位置显示
+        map.on('mousemove', function(e) {
+            const lng = e.lnglat.getLng().toFixed(6);
+            const lat = e.lnglat.getLat().toFixed(6);
+            document.getElementById('map').title = `经度: ${lng}, 纬度: ${lat}`;
+        });
+
+        // 初始化搜索功能
+        AMapUI.loadUI(['misc/PoiPicker'], function(PoiPicker) {
+            const poiPicker = new PoiPicker({
+                input: 'map-search',
+                placeSearchOptions: {
+                    map: map
+                }
+            });
+
+            // 监听poi选中事件
+            poiPicker.on('poiPicked', function(poiResult) {
+                const poi = poiResult.item;
+                map.setCenter(poi.location);
+                map.setZoom(15);
+            });
+        });
+    }
+
+    // 加载路线列表
+    loadRoutesList();
+
+    // 添加模式切换事件
+    document.getElementById('view-mode').addEventListener('click', function() {
+        setMapMode('view');
+    });
+
+    document.getElementById('edit-mode').addEventListener('click', function() {
+        setMapMode('edit');
+    });
+
+    document.getElementById('itinerary-mode').addEventListener('click', function() {
+        setMapMode('itinerary');
+    });
+
+    // 添加路线选择变化事件
+    document.getElementById('route-select').addEventListener('change', function() {
+        const routeId = this.value;
+
+        if (routeId === 'new') {
+            // 创建新路线
+            createNewRoute();
+        } else {
+            // 加载现有路线
+            loadRouteDetails(routeId);
+        }
+    });
+
+    // 添加保存路线按钮事件
+    document.getElementById('save-route').addEventListener('click', saveRoute);
+
+    // 添加点详情表单提交事件
+    document.getElementById('point-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        savePointDetails();
+    });
+
+    // 添加删除点按钮事件
+    document.getElementById('delete-point').addEventListener('click', deleteCurrentPoint);
+
+    // 初始化FilePond
+    initFilePond();
+
+    // 默认设置为查看模式
+    setMapMode('view');
+}
+
+// 加载导游数据
+function loadGuidesData() {
+    fetch('/api/agency/guides/detail/')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.guides.length > 0) {
+                // 显示导游列表，隐藏空状态
+                document.getElementById('no-guides').style.display = 'none';
+
+                const guidesList = document.getElementById('guides-list');
+                guidesList.innerHTML = '';
+
+                data.guides.forEach(guide => {
+                    const row = document.createElement('tr');
+
+                    // 格式化当前带团情况
+                    let currentTourText = '无';
+                    if (guide.current_itineraries && guide.current_itineraries.length > 0) {
+                        currentTourText = guide.current_itineraries.map(i => i.name).join(', ');
+                    }
+
+                    row.innerHTML = `
+                        <td>${guide.name}</td>
+                        <td>${guide.guide_id}</td>
+                        <td>${guide.phone}</td>
+                        <td>${currentTourText}</td>
+                        <td>${guide.rating.toFixed(1)}/5.0</td>
+                        <td>${guide.complaints_count}</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary view-guide" data-id="${guide.id}">
+                                <i class='bx bx-show'></i> 详情
+                            </button>
+                            <button class="btn btn-sm btn-outline-secondary set-wage" data-id="${guide.id}" data-name="${guide.name}">
+                                <i class='bx bx-money'></i> 设置工资
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger fire-guide" data-id="${guide.id}" data-name="${guide.name}">
+                                <i class='bx bx-user-x'></i> 开除
+                            </button>
+                        </td>
+                    `;
+
+                    guidesList.appendChild(row);
+                });
+
+                // 添加按钮事件
+                document.querySelectorAll('.view-guide').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const guideId = this.getAttribute('data-id');
+                        showGuideDetails(guideId);
+                    });
+                });
+
+                document.querySelectorAll('.set-wage').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const guideId = this.getAttribute('data-id');
+                        const guideName = this.getAttribute('data-name');
+                        showSetWageModal(guideId, guideName);
+                    });
+                });
+
+                document.querySelectorAll('.fire-guide').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const guideId = this.getAttribute('data-id');
+                        const guideName = this.getAttribute('data-name');
+                        fireGuide(guideId, guideName);
+                    });
+                });
+
+                // 添加选聘导游按钮事件
+                document.getElementById('hire-guide-btn').addEventListener('click', showHireGuideModal);
+            } else {
+                // 显示空状态，隐藏导游列表
+                document.getElementById('no-guides').style.display = 'block';
+                document.getElementById('guides-list').innerHTML = '';
+
+                // 添加选聘导游按钮事件
+                document.getElementById('hire-guide-btn').addEventListener('click', showHireGuideModal);
+            }
+        })
+        .catch(error => console.error('Error loading guides:', error));
+}
+
+// 显示导游详情
+function showGuideDetails(guideId) {
+    fetch(`/api/agency/guides/${guideId}/`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const guide = data.guide;
+
+                // 填充模态框数据
+                document.getElementById('view-guide-name').textContent = guide.name;
+                document.getElementById('view-guide-id').textContent = `导游证号: ${guide.guide_id}`;
+                document.getElementById('view-guide-phone').textContent = guide.phone;
+                document.getElementById('view-guide-email').textContent = guide.email;
+                document.getElementById('view-guide-tours-count').textContent = guide.tours_count;
+                document.getElementById('view-guide-rating').textContent = `${(guide.rating * 100).toFixed(1)}%`;
+                document.getElementById('view-guide-complaints').textContent = guide.complaints_count;
+                document.getElementById('view-guide-join-date').textContent = guide.join_date;
+
+                // 显示导游头像
+                if (guide.profile_image) {
+                    document.getElementById('guide-profile-image').src = guide.profile_image;
+                } else {
+                    document.getElementById('guide-profile-image').src = '/static/images/default-avatar.png';
+                }
+
+                // 显示行程
+                const itinerariesList = document.getElementById('view-guide-itineraries');
+                const noItineraries = document.getElementById('view-guide-no-itineraries');
+
+                if (guide.itineraries && guide.itineraries.length > 0) {
+                    itinerariesList.innerHTML = '';
+                    noItineraries.style.display = 'none';
+
+                    guide.itineraries.forEach(itinerary => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${itinerary.name}</td>
+                            <td>${itinerary.start_date}</td>
+                            <td><span class="badge ${getStatusBadgeClass(itinerary.status)}">${getStatusText(itinerary.status)}</span></td>
+                        `;
+                        itinerariesList.appendChild(row);
+                    });
+                } else {
+                    itinerariesList.innerHTML = '';
+                    noItineraries.style.display = 'block';
+                }
+
+                // 显示模态框
+                const modal = new bootstrap.Modal(document.getElementById('viewGuideModal'));
+                modal.show();
+            }
+        })
+        .catch(error => console.error('Error loading guide details:', error));
+}
+
+// 显示设置工资模态框
+function showSetWageModal(guideId, guideName) {
+    // 填充模态框数据
+    document.getElementById('guide-id-for-wage').value = guideId;
+    document.getElementById('guide-name').value = guideName;
+
+    // 加载当前工资数据
+    fetch(`/api/agency/guides/${guideId}/wage/`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById('base-wage').value = data.wage.base_wage || 0;
+                document.getElementById('bonus-per-tour').value = data.wage.bonus_per_tour || 0;
+                document.getElementById('commission-percentage').value = data.wage.commission_percentage || 0;
+            } else {
+                // 默认值
+                document.getElementById('base-wage').value = 0;
+                document.getElementById('bonus-per-tour').value = 0;
+                document.getElementById('commission-percentage').value = 0;
+            }
+
+            // 显示模态框
+            const modal = new bootstrap.Modal(document.getElementById('setGuideWageModal'));
+            modal.show();
+        })
+        .catch(error => {
+            console.error('Error loading guide wage:', error);
+            // 默认值
+            document.getElementById('base-wage').value = 0;
+            document.getElementById('bonus-per-tour').value = 0;
+            document.getElementById('commission-percentage').value = 0;
+
+            // 显示模态框
+            const modal = new bootstrap.Modal(document.getElementById('setGuideWageModal'));
+            modal.show();
+        });
+
+    // 添加保存按钮事件
+    document.getElementById('save-guide-wage').onclick = function() {
+        const formData = {
+            guide_id: guideId,
+            base_wage: parseFloat(document.getElementById('base-wage').value),
+            bonus_per_tour: parseFloat(document.getElementById('bonus-per-tour').value),
+            commission_percentage: parseFloat(document.getElementById('commission-percentage').value)
+        };
+
+        fetch(`/api/agency/guides/${guideId}/wage/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify(formData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('工资设置成功！');
+                bootstrap.Modal.getInstance(document.getElementById('setGuideWageModal')).hide();
+            } else {
+                alert(`设置失败: ${data.error || '未知错误'}`);
+            }
+        })
+        .catch(error => {
+            console.error('Error saving guide wage:', error);
+            alert('保存失败，请稍后再试');
+        });
+    };
+}
+
+// 开除导游
+function fireGuide(guideId, guideName) {
+    if (!confirm(`确定要开除导游 ${guideName} 吗？`)) return;
+
+    fetch(`/api/agency/guides/${guideId}/fire/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': csrfToken
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('导游已成功开除');
+            // 重新加载导游列表
+            loadGuidesData();
+        } else {
+            alert(`开除失败: ${data.error || '未知错误'}`);
+        }
+    })
+    .catch(error => {
+        console.error('Error firing guide:', error);
+        alert('操作失败，请稍后再试');
+    });
+}
+
+// 显示选聘导游模态框
+function showHireGuideModal() {
+    // 加载可选聘的导游列表
+    fetch('/api/agency/available-guides/')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.guides.length > 0) {
+                // 显示导游列表，隐藏空状态
+                document.getElementById('no-available-guides').style.display = 'none';
+
+                const guidesList = document.getElementById('available-guides-list');
+                guidesList.innerHTML = '';
+
+                data.guides.forEach(guide => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${guide.name}</td>
+                        <td>${guide.guide_id}</td>
+                        <td>${guide.phone}</td>
+                        <td>${guide.email}</td>
+                        <td>
+                            <button class="btn btn-sm btn-primary hire-guide-btn" data-id="${guide.id}">
+                                <i class='bx bx-user-plus'></i> 聘请
+                            </button>
+                        </td>
+                    `;
+                    guidesList.appendChild(row);
+                });
+
+                // 添加聘请按钮事件
+                document.querySelectorAll('.hire-guide-btn').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const guideId = this.getAttribute('data-id');
+                        hireGuide(guideId, this);
+                    });
+                });
+            } else {
+                // 显示空状态，隐藏导游列表
+                document.getElementById('no-available-guides').style.display = 'block';
+                document.getElementById('available-guides-list').innerHTML = '';
+            }
+
+            // 显示模态框
+            const modal = new bootstrap.Modal(document.getElementById('hireGuideModal'));
+            modal.show();
+        })
+        .catch(error => {
+            console.error('Error loading available guides:', error);
+            alert('加载可聘导游列表失败，请稍后再试');
+        });
+}
+
+// 聘请导游
+function hireGuide(guideId, buttonElement) {
+    buttonElement.disabled = true;
+    buttonElement.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> 处理中...';
+
+    fetch(`/api/agency/guides/${guideId}/hire/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': csrfToken
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('已向导游发送聘请邀请，等待导游确认');
+            // 关闭模态框
+            bootstrap.Modal.getInstance(document.getElementById('hireGuideModal')).hide();
+            // 重新加载导游列表
+            loadGuidesData();
+        } else {
+            alert(`聘请失败: ${data.error || '未知错误'}`);
+            buttonElement.disabled = false;
+            buttonElement.innerHTML = '<i class="bx bx-user-plus"></i> 聘请';
+        }
+    })
+    .catch(error => {
+        console.error('Error hiring guide:', error);
+        alert('操作失败，请稍后再试');
+        buttonElement.disabled = false;
+        buttonElement.innerHTML = '<i class="bx bx-user-plus"></i> 聘请';
+    });
+}
+
+// 加载预订数据
+function loadBookingsData() {
+    // 加载当前预订
+    fetch('/api/agency/bookings/active/')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.bookings.length > 0) {
+                // 显示预订列表，隐藏空状态
+                document.getElementById('no-active-bookings').style.display = 'none';
+
+                const bookingsList = document.getElementById('active-bookings-list');
+                bookingsList.innerHTML = '';
+
+                data.bookings.forEach(booking => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${booking.tourist_name}</td>
+                        <td>${booking.tourist_phone}</td>
+                        <td>${booking.itinerary_name}</td>
+                        <td>${booking.start_date}</td>
+                        <td>${booking.booking_time}</td>
+                        <td><span class="badge ${getBookingStatusBadgeClass(booking.status)}">${getBookingStatusText(booking.status)}</span></td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary view-tourist" data-id="${booking.tourist_id}">
+                                <i class='bx bx-user'></i> 查看游客
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger cancel-booking" data-id="${booking.id}">
+                                <i class='bx bx-x-circle'></i> 取消预订
+                            </button>
+                        </td>
+                    `;
+                    bookingsList.appendChild(row);
+                });
+
+                // 添加按钮事件
+                document.querySelectorAll('.view-tourist').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const touristId = this.getAttribute('data-id');
+                        showTouristDetails(touristId);
+                    });
+                });
+
+                document.querySelectorAll('.cancel-booking').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const bookingId = this.getAttribute('data-id');
+                        cancelBooking(bookingId);
+                    });
+                });
+            } else {
+                // 显示空状态，隐藏预订列表
+                document.getElementById('no-active-bookings').style.display = 'block';
+                document.getElementById('active-bookings-list').innerHTML = '';
+            }
+        })
+        .catch(error => console.error('Error loading active bookings:', error));
+
+    // 加载等待审核的预订
+    fetch('/api/agency/bookings/waiting/')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.bookings.length > 0) {
+                // 显示预订列表，隐藏空状态
+                document.getElementById('no-waiting-bookings').style.display = 'none';
+
+                const bookingsList = document.getElementById('waiting-bookings-list');
+                bookingsList.innerHTML = '';
+
+                data.bookings.forEach(booking => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${booking.tourist_name}</td>
+                        <td>${booking.tourist_phone}</td>
+                        <td>${booking.itinerary_name}</td>
+                        <td>${booking.start_date}</td>
+                        <td>${booking.reason || '无'}</td>
+                        <td><span class="badge badge-secondary">待审核</span></td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-success approve-booking" data-id="${booking.id}">
+                                <i class='bx bx-check-circle'></i> 批准
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger reject-booking" data-id="${booking.id}">
+                                <i class='bx bx-x-circle'></i> 拒绝
+                            </button>
+                        </td>
+                    `;
+                    bookingsList.appendChild(row);
+                });
+
+                // 添加按钮事件
+                document.querySelectorAll('.approve-booking').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const bookingId = this.getAttribute('data-id');
+                        approveBooking(bookingId);
+                    });
+                });
+
+                document.querySelectorAll('.reject-booking').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const bookingId = this.getAttribute('data-id');
+                        rejectBooking(bookingId);
+                    });
+                });
+            } else {
+                // 显示空状态，隐藏预订列表
+                document.getElementById('no-waiting-bookings').style.display = 'block';
+                document.getElementById('waiting-bookings-list').innerHTML = '';
+            }
+        })
+        .catch(error => console.error('Error loading waiting bookings:', error));
+
+    // 加载历史预订
+    fetch('/api/agency/bookings/history/')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.bookings.length > 0) {
+                // 显示预订列表，隐藏空状态
+                document.getElementById('no-history-bookings').style.display = 'none';
+
+                const bookingsList = document.getElementById('history-bookings-list');
+                bookingsList.innerHTML = '';
+
+                data.bookings.forEach(booking => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${booking.tourist_name}</td>
+                        <td>${booking.tourist_phone}</td>
+                        <td>${booking.itinerary_name}</td>
+                        <td>${booking.start_date}</td>
+                        <td>${booking.booking_time}</td>
+                        <td><span class="badge ${getBookingStatusBadgeClass(booking.status)}">${getBookingStatusText(booking.status)}</span></td>
+                    `;
+                    bookingsList.appendChild(row);
+                });
+            } else {
+                // 显示空状态，隐藏预订列表
+                document.getElementById('no-history-bookings').style.display = 'block';
+                document.getElementById('history-bookings-list').innerHTML = '';
+            }
+        })
+        .catch(error => console.error('Error loading history bookings:', error));
+}
+
+// 显示游客详情
+function showTouristDetails(touristId) {
+    fetch(`/api/agency/tourists/${touristId}/`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const tourist = data.tourist;
+
+                // 填充模态框数据
+                document.getElementById('view-tourist-name').textContent = tourist.name;
+                document.getElementById('view-tourist-phone').textContent = tourist.phone;
+                document.getElementById('view-tourist-email').textContent = tourist.email;
+                document.getElementById('view-tourist-registered').textContent = tourist.registered_date;
+                document.getElementById('view-tourist-bookings').textContent = tourist.bookings_count;
+
+                // 显示游客头像
+                if (tourist.profile_image) {
+                    document.getElementById('tourist-profile-image').src = tourist.profile_image;
+                } else {
+                    document.getElementById('tourist-profile-image').src = '/static/images/default-avatar.png';
+                }
+
+                // 添加发送消息按钮事件
+                document.getElementById('contact-tourist').onclick = function() {
+                    // 关闭游客详情模态框
+                    bootstrap.Modal.getInstance(document.getElementById('viewTouristModal')).hide();
+
+                    // 切换到通知标签页
+                    document.querySelector('.sidebar-menu a[href="#notifications-tab"]').click();
+
+                    // 打开与该游客的聊天
+                    openChatWithTourist(touristId, tourist.name);
+                };
+
+                // 显示模态框
+                const modal = new bootstrap.Modal(document.getElementById('viewTouristModal'));
+                modal.show();
+            }
+        })
+        .catch(error => console.error('Error loading tourist details:', error));
+}
+
+// 批准预订
+function approveBooking(bookingId) {
+    if (!confirm('确定要批准此预订申请吗？')) return;
+
+    fetch(`/api/agency/bookings/${bookingId}/approve/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': csrfToken
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('预订已成功批准');
+            // 重新加载预订数据
+            loadBookingsData();
+        } else {
+            alert(`批准失败: ${data.error || '未知错误'}`);
+        }
+    })
+    .catch(error => {
+        console.error('Error approving booking:', error);
+        alert('操作失败，请稍后再试');
+    });
+}
+
+// 拒绝预订
+function rejectBooking(bookingId) {
+    if (!confirm('确定要拒绝此预订申请吗？')) return;
+
+    fetch(`/api/agency/bookings/${bookingId}/reject/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': csrfToken
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('预订已成功拒绝');
+            // 重新加载预订数据
+            loadBookingsData();
+        } else {
+            alert(`拒绝失败: ${data.error || '未知错误'}`);
+        }
+    })
+    .catch(error => {
+        console.error('Error rejecting booking:', error);
+        alert('操作失败，请稍后再试');
+    });
+}
+
+// 取消预订
+function cancelBooking(bookingId) {
+    if (!confirm('确定要取消此预订吗？')) return;
+
+    fetch(`/api/agency/bookings/${bookingId}/cancel/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': csrfToken
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('预订已成功取消');
+            // 重新加载预订数据
+            loadBookingsData();
+        } else {
+            alert(`取消失败: ${data.error || '未知错误'}`);
+        }
+    })
+    .catch(error => {
+        console.error('Error cancelling booking:', error);
+        alert('操作失败，请稍后再试');
+    });
+}
+
+// 加载行程数据
+function loadItinerariesData() {
+    fetch('/api/agency/itineraries/')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.itineraries.length > 0) {
+                // 显示行程列表，隐藏空状态
+                document.getElementById('no-itineraries-data').style.display = 'none';
+
+                const itinerariesTable = document.getElementById('itineraries-table');
+                itinerariesTable.innerHTML = '';
+
+                data.itineraries.forEach(itinerary => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${itinerary.name}</td>
+                        <td>${itinerary.start_date}</td>
+                        <td>${itinerary.guide || '未分配'}</td>
+                        <td>${itinerary.bookings_count}/${itinerary.max_tourists}</td>
+                        <td><span class="badge ${getStatusBadgeClass(itinerary.status)}">${getStatusText(itinerary.status)}</span></td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary view-itinerary" data-id="${itinerary.id}">
+                                <i class='bx bx-show'></i> 查看详情
+                            </button>
+                            <button class="btn btn-sm btn-outline-secondary edit-itinerary" data-id="${itinerary.id}">
+                                <i class='bx bx-edit'></i> 编辑
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger delete-itinerary" data-id="${itinerary.id}">
+                                <i class='bx bx-trash'></i> 删除
+                            </button>
+                        </td>
+                    `;
+                    itinerariesTable.appendChild(row);
+                });
+
+                // 添加按钮事件
+                document.querySelectorAll('.view-itinerary').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const itineraryId = this.getAttribute('data-id');
+                        viewItineraryDetails(itineraryId);
+                    });
+                });
+
+                document.querySelectorAll('.edit-itinerary').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const itineraryId = this.getAttribute('data-id');
+                        editItinerary(itineraryId);
+                    });
+                });
+
+                document.querySelectorAll('.delete-itinerary').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const itineraryId = this.getAttribute('data-id');
+                        deleteItinerary(itineraryId);
+                    });
+                });
+
+                // 添加新增行程按钮事件
+                document.getElementById('create-itinerary-btn').addEventListener('click', showCreateItineraryModal);
+            } else {
+                // 显示空状态，隐藏行程列表
+                document.getElementById('no-itineraries-data').style.display = 'block';
+                document.getElementById('itineraries-table').innerHTML = '';
+
+                // 添加新增行程按钮事件
+                document.getElementById('create-itinerary-btn').addEventListener('click', showCreateItineraryModal);
+            }
+        })
+        .catch(error => console.error('Error loading itineraries:', error));
+}
+
+// 查看行程详情
+function viewItineraryDetails(itineraryId) {
+    // 切换到路线管理标签页
+    document.querySelector('.sidebar-menu a[href="#routes-tab"]').click();
+
+    // 加载行程对应的路线
+    fetch(`/api/agency/itineraries/${itineraryId}/`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const itinerary = data.itinerary;
+
+                // 选择对应的路线
+                document.getElementById('route-select').value = itinerary.route_id;
+
+                // 触发路线加载
+                loadRouteDetails(itinerary.route_id);
+
+                // 设置为查看模式
+                setMapMode('view');
+            }
+        })
+        .catch(error => console.error('Error loading itinerary details:', error));
+}
+
+// 显示创建行程模态框
+function showCreateItineraryModal() {
+    // 重置表单
+    document.getElementById('itinerary-form').reset();
+    document.getElementById('itinerary-id').value = '';
+    document.getElementById('itineraryModalLabel').textContent = '新增行程';
+
+    // 加载路线选项
+    fetch('/api/agency/routes/')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const routeSelect = document.getElementById('itinerary-route');
+                routeSelect.innerHTML = '<option value="">请选择路线</option>';
+
+                data.routes.forEach(route => {
+                    if (route.is_published) {
+                        const option = document.createElement('option');
+                        option.value = route.id;
+                        option.textContent = `${route.name} (${route.points_count}个景点)`;
+                        routeSelect.appendChild(option);
+                    }
+                });
+            }
+        })
+        .catch(error => console.error('Error loading routes:', error));
+
+    // 加载导游选项
+    fetch('/api/agency/guides/detail/')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const guideSelect = document.getElementById('itinerary-guide');
+                guideSelect.innerHTML = '<option value="">请选择导游</option>';
+
+                data.guides.forEach(guide => {
+                    const option = document.createElement('option');
+                    option.value = guide.id;
+                    option.textContent = guide.name;
+                    guideSelect.appendChild(option);
+                });
+            }
+        })
+        .catch(error => console.error('Error loading guides:', error));
+
+    // 设置保存按钮事件
+    document.getElementById('save-itinerary').onclick = function() {
+        const formData = {
+            name: document.getElementById('itinerary-name').value,
+            route_id: document.getElementById('itinerary-route').value,
+            guide_id: document.getElementById('itinerary-guide').value,
+            start_date: document.getElementById('itinerary-start-date').value,
+            max_tourists: document.getElementById('itinerary-max-tourists').value,
+            price: document.getElementById('itinerary-price').value,
+            description: document.getElementById('itinerary-description').value
+        };
+
+        // 验证必填字段
+        if (!formData.name || !formData.route_id || !formData.start_date) {
+            alert('请填写行程名称、选择路线和设置出发日期');
+            return;
+        }
+
+        fetch('/api/agency/itineraries/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify(formData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('行程创建成功！');
+                bootstrap.Modal.getInstance(document.getElementById('itineraryModal')).hide();
+                // 重新加载行程列表
+                loadItinerariesData();
+            } else {
+                alert(`创建失败: ${data.error || '未知错误'}`);
+            }
+        })
+        .catch(error => {
+            console.error('Error creating itinerary:', error);
+            alert('创建失败，请稍后再试');
+        });
+    };
+
+    // 显示模态框
+    const modal = new bootstrap.Modal(document.getElementById('itineraryModal'));
+    modal.show();
+}
+
+// 编辑行程
+function editItinerary(itineraryId) {
+    // 设置模态框标题
+    document.getElementById('itineraryModalLabel').textContent = '编辑行程';
+    document.getElementById('itinerary-id').value = itineraryId;
+
+    // 加载行程数据
+    fetch(`/api/agency/itineraries/${itineraryId}/`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const itinerary = data.itinerary;
+
+                // 填充表单数据
+                document.getElementById('itinerary-name').value = itinerary.name;
+                document.getElementById('itinerary-start-date').value = itinerary.start_date;
+                document.getElementById('itinerary-max-tourists').value = itinerary.max_tourists;
+                document.getElementById('itinerary-price').value = itinerary.price;
+                document.getElementById('itinerary-description').value = itinerary.description || '';
+
+                // 加载路线选项
+                fetch('/api/agency/routes/')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            const routeSelect = document.getElementById('itinerary-route');
+                            routeSelect.innerHTML = '<option value="">请选择路线</option>';
+
+                            data.routes.forEach(route => {
+                                if (route.is_published) {
+                                    const option = document.createElement('option');
+                                    option.value = route.id;
+                                    option.textContent = `${route.name} (${route.points_count}个景点)`;
+
+                                    if (route.id === itinerary.route_id) {
+                                        option.selected = true;
+                                    }
+
+                                    routeSelect.appendChild(option);
+                                }
+                            });
+                        }
+                    });
+
+                // 加载导游选项
+                fetch('/api/agency/guides/detail/')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            const guideSelect = document.getElementById('itinerary-guide');
+                            guideSelect.innerHTML = '<option value="">请选择导游</option>';
+
+                            data.guides.forEach(guide => {
+                                const option = document.createElement('option');
+                                option.value = guide.id;
+                                option.textContent = guide.name;
+
+                                if (guide.id === itinerary.guide_id) {
+                                    option.selected = true;
+                                }
+
+                                guideSelect.appendChild(option);
+                            });
+                        }
+                    });
+
+                // 设置保存按钮事件
+                document.getElementById('save-itinerary').onclick = function() {
+                    const formData = {
+                        name: document.getElementById('itinerary-name').value,
+                        route_id: document.getElementById('itinerary-route').value,
+                        guide_id: document.getElementById('itinerary-guide').value,
+                        start_date: document.getElementById('itinerary-start-date').value,
+                        max_tourists: document.getElementById('itinerary-max-tourists').value,
+                        price: document.getElementById('itinerary-price').value,
+                        description: document.getElementById('itinerary-description').value
+                    };
+
+                    // 验证必填字段
+                    if (!formData.name || !formData.route_id || !formData.start_date) {
+                        alert('请填写行程名称、选择路线和设置出发日期');
+                        return;
+                    }
+
+                    fetch(`/api/agency/itineraries/${itineraryId}/`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': csrfToken
+                        },
+                        body: JSON.stringify(formData)
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert('行程更新成功！');
+                            bootstrap.Modal.getInstance(document.getElementById('itineraryModal')).hide();
+                            // 重新加载行程列表
+                            loadItinerariesData();
+                        } else {
+                            alert(`更新失败: ${data.error || '未知错误'}`);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error updating itinerary:', error);
+                        alert('更新失败，请稍后再试');
+                    });
+                };
+
+                // 显示模态框
+                const modal = new bootstrap.Modal(document.getElementById('itineraryModal'));
+                modal.show();
+            }
+        })
+        .catch(error => console.error('Error loading itinerary details:', error));
+}
+
+// 删除行程
+function deleteItinerary(itineraryId) {
+    if (!confirm('确定要删除此行程吗？已有的预订将被自动取消。')) return;
+
+    fetch(`/api/agency/itineraries/${itineraryId}/`, {
+        method: 'DELETE',
+        headers: {
+            'X-CSRFToken': csrfToken
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('行程已成功删除');
+            // 重新加载行程列表
+            loadItinerariesData();
+        } else {
+            alert(`删除失败: ${data.error || '未知错误'}`);
+        }
+    })
+    .catch(error => {
+        console.error('Error deleting itinerary:', error);
+        alert('删除失败，请稍后再试');
+    });
+}
+
+// 初始化聊天界面
+function initChatInterface() {
+    // 加载聊天联系人
+    loadChatContacts();
+
+    // 添加发送消息事件
+    document.querySelector('.chat-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const messageInput = document.querySelector('.chat-input');
+        const message = messageInput.value.trim();
+
+        if (message) {
+            sendMessage(message);
+            messageInput.value = '';
+        }
+    });
+
+    // 监听Enter键发送消息
+    document.querySelector('.chat-input').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            document.querySelector('.send-btn').click();
+        }
+    });
+
+    // 点击发送按钮发送消息
+    document.querySelector('.send-btn').addEventListener('click', function() {
+        document.querySelector('.chat-form').dispatchEvent(new Event('submit'));
+    });
+}
+
+// 加载聊天联系人
+function loadChatContacts() {
+    fetch('/api/agency/chat/contacts/')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const chatContacts = document.querySelector('.chat-contacts');
+                chatContacts.innerHTML = '';
+
+                // 添加群组聊天
+                const groupChat = document.createElement('div');
+                groupChat.className = 'chat-contact active';
+                groupChat.setAttribute('data-id', 'group');
+                groupChat.setAttribute('data-type', 'group');
+                groupChat.innerHTML = `
+                    <img src="/static/images/group-avatar.jpg" class="chat-contact-avatar" alt="群组头像">
+                    <div class="chat-contact-info">
+                        <div class="chat-contact-name">
+                            <span>旅游行业交流群</span>
+                            <span class="unread-badge">3</span>
+                        </div>
+                        <div class="chat-contact-preview">文旅局: 关于最新旅游安全规定的通知</div>
+                    </div>
+                `;
+                chatContacts.appendChild(groupChat);
+
+                // 添加导游联系人
+                data.guides.forEach(guide => {
+                    const guideContact = document.createElement('div');
+                    guideContact.className = 'chat-contact';
+                    guideContact.setAttribute('data-id', guide.id);
+                    guideContact.setAttribute('data-type', 'guide');
+                    guideContact.innerHTML = `
+                        <img src="${guide.profile_image || '/static/images/default-avatar.png'}" class="chat-contact-avatar" alt="导游头像">
+                        <div class="chat-contact-info">
+                            <div class="chat-contact-name">
+                                <span>${guide.name}</span>
+                                ${guide.unread_count > 0 ? `<span class="unread-badge">${guide.unread_count}</span>` : ''}
+                            </div>
+                            <div class="chat-contact-preview">${guide.last_message || '暂无消息'}</div>
+                        </div>
+                    `;
+                    chatContacts.appendChild(guideContact);
+                });
+
+                // 添加游客联系人
+                data.tourists.forEach(tourist => {
+                    const touristContact = document.createElement('div');
+                    touristContact.className = 'chat-contact';
+                    touristContact.setAttribute('data-id', tourist.id);
+                    touristContact.setAttribute('data-type', 'tourist');
+                    touristContact.innerHTML = `
+                        <img src="${tourist.profile_image || '/static/images/default-avatar.png'}" class="chat-contact-avatar" alt="游客头像">
+                        <div class="chat-contact-info">
+                            <div class="chat-contact-name">
+                                <span>${tourist.name}</span>
+                                ${tourist.unread_count > 0 ? `<span class="unread-badge">${tourist.unread_count}</span>` : ''}
+                            </div>
+                            <div class="chat-contact-preview">${tourist.last_message || '暂无消息'}</div>
+                        </div>
+                    `;
+                    chatContacts.appendChild(touristContact);
+                });
+
+                // 添加联系人点击事件
+                document.querySelectorAll('.chat-contact').forEach(contact => {
+                    contact.addEventListener('click', function() {
+                        // 移除所有活跃状态
+                        document.querySelectorAll('.chat-contact').forEach(c => c.classList.remove('active'));
+
+                        // 设置当前联系人为活跃
+                        this.classList.add('active');
+
+                        // 加载聊天记录
+                        const contactId = this.getAttribute('data-id');
+                        const contactType = this.getAttribute('data-type');
+                        loadChatMessages(contactId, contactType);
+
+                        // 更新聊天标题
+                        updateChatHeader(this);
+                    });
+                });
+
+                // 默认加载群组聊天
+                loadChatMessages('group', 'group');
+            }
+        })
+        .catch(error => console.error('Error loading chat contacts:', error));
+}
+
+// 加载聊天记录
+function loadChatMessages(contactId, contactType) {
+    fetch(`/api/agency/chat/messages/${contactType}/${contactId}/`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const chatMessages = document.querySelector('.chat-messages');
+                chatMessages.innerHTML = '';
+
+                data.messages.forEach(message => {
+                    const messageElement = document.createElement('div');
+                    messageElement.className = `chat-message ${message.is_self ? 'sent' : 'received'}`;
+
+                    let messageContent = `<div>${message.content}</div>`;
+
+                    // 如果是群聊且不是自己发的消息，显示发送者名称
+                    if (contactType === 'group' && !message.is_self) {
+                        messageContent = `<div><strong>${message.sender_name}:</strong> ${message.content}</div>`;
+                    }
+
+                    messageElement.innerHTML = `
+                        ${messageContent}
+                        <span class="chat-message-time">${message.time}</span>
+                    `;
+
+                    chatMessages.appendChild(messageElement);
+                });
+
+                // 滚动到最新消息
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+
+                // 标记消息为已读
+                if (contactType !== 'group') {
+                    const contactElement = document.querySelector(`.chat-contact[data-id="${contactId}"][data-type="${contactType}"]`);
+                    const unreadBadge = contactElement.querySelector('.unread-badge');
+
+                    if (unreadBadge) {
+                        unreadBadge.remove();
+                    }
+
+                    fetch(`/api/agency/chat/mark-read/${contactType}/${contactId}/`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': csrfToken
+                        }
+                    });
+                }
+            }
+        })
+        .catch(error => console.error('Error loading chat messages:', error));
+}
+
+// 发送消息
+function sendMessage(message) {
+    // 获取当前活跃的联系人
+    const activeContact = document.querySelector('.chat-contact.active');
+    if (!activeContact) return;
+
+    const contactId = activeContact.getAttribute('data-id');
+    const contactType = activeContact.getAttribute('data-type');
+
+    // 添加临时消息到界面
+    const chatMessages = document.querySelector('.chat-messages');
+    const messageElement = document.createElement('div');
+    messageElement.className = 'chat-message sent';
+    messageElement.innerHTML = `
+        <div>${message}</div>
+        <span class="chat-message-time">刚刚</span>
+    `;
+    chatMessages.appendChild(messageElement);
+
+    // 滚动到最新消息
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+
+    // 发送消息到服务器
+    fetch('/api/agency/chat/send/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
+        },
+        body: JSON.stringify({
+            recipient_id: contactId,
+            recipient_type: contactType,
+            content: message
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (!data.success) {
+            alert(`消息发送失败: ${data.error || '未知错误'}`);
+            // 标记临时消息为发送失败
+            messageElement.classList.add('failed');
+            messageElement.querySelector('.chat-message-time').textContent = '发送失败';
+        }
+    })
+    .catch(error => {
+        console.error('Error sending message:', error);
+        // 标记临时消息为发送失败
+        messageElement.classList.add('failed');
+        messageElement.querySelector('.chat-message-time').textContent = '发送失败';
+    });
+}
+
+// 更新聊天标题栏
+function updateChatHeader(contactElement) {
+    const contactName = contactElement.querySelector('.chat-contact-name span').textContent;
+    const contactImage = contactElement.querySelector('.chat-contact-avatar').src;
+    const contactType = contactElement.getAttribute('data-type');
+
+    const chatHeader = document.querySelector('.chat-header');
+    chatHeader.querySelector('.chat-header-avatar').src = contactImage;
+    chatHeader.querySelector('.chat-header-name').textContent = contactName;
+
+    let statusText = '';
+    if (contactType === 'group') {
+        statusText = '文旅局，3个旅行社';
+    } else if (contactType === 'guide') {
+        statusText = '导游';
+    } else if (contactType === 'tourist') {
+        statusText = '游客';
+    }
+
+    chatHeader.querySelector('.chat-header-status').textContent = statusText;
+}
+
+// 打开与游客的聊天
+function openChatWithTourist(touristId, touristName) {
+    // 切换到通知标签页
+    document.querySelector('.sidebar-menu a[href="#notifications-tab"]').click();
+
+    // 寻找游客联系人
+    const touristContact = document.querySelector(`.chat-contact[data-id="${touristId}"][data-type="tourist"]`);
+
+    if (touristContact) {
+        // 如果已存在，点击该联系人
+        touristContact.click();
+    } else {
+        // 如果不存在，创建新联系人
+        fetch(`/api/agency/tourists/${touristId}/`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const tourist = data.tourist;
+
+                    const chatContacts = document.querySelector('.chat-contacts');
+                    const touristContact = document.createElement('div');
+                    touristContact.className = 'chat-contact';
+                    touristContact.setAttribute('data-id', tourist.id);
+                    touristContact.setAttribute('data-type', 'tourist');
+                    touristContact.innerHTML = `
+                        <img src="${tourist.profile_image || '/static/images/default-avatar.png'}" class="chat-contact-avatar" alt="游客头像">
+                        <div class="chat-contact-info">
+                            <div class="chat-contact-name">
+                                <span>${tourist.name}</span>
+                            </div>
+                            <div class="chat-contact-preview">暂无消息</div>
+                        </div>
+                    `;
+                    chatContacts.appendChild(touristContact);
+
+                    // 添加点击事件
+                    touristContact.addEventListener('click', function() {
+                        // 移除所有活跃状态
+                        document.querySelectorAll('.chat-contact').forEach(c => c.classList.remove('active'));
+
+                        // 设置当前联系人为活跃
+                        this.classList.add('active');
+
+                        // 加载聊天记录
+                        loadChatMessages(tourist.id, 'tourist');
+
+                        // 更新聊天标题
+                        updateChatHeader(this);
+                    });
+
+                    // 点击新创建的联系人
+                    touristContact.click();
+                }
+            })
+            .catch(error => console.error('Error loading tourist details:', error));
+    }
+}
+
+// 初始化统计图表
+function initStatisticsCharts() {
+    // 加载统计数据
+    fetch('/api/agency/statistics/')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // 创建月度预订统计图表
+                createBookingsChart(data.bookings_by_month);
+
+                // 创建热门路线排行图表
+                createRoutesChart(data.popular_routes);
+
+                // 创建收入趋势分析图表
+                createRevenueChart(data.revenue_trend);
+            }
+        })
+        .catch(error => console.error('Error loading statistics:', error));
+}
+
+// 创建月度预订统计图表
+function createBookingsChart(data) {
+    const ctx = document.getElementById('bookings-chart').getContext('2d');
+
+    const chart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: data.labels,
+            datasets: [{
+                label: '预订数量',
+                data: data.values,
+                backgroundColor: 'rgba(58, 123, 213, 0.6)',
+                borderColor: 'rgba(58, 123, 213, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        precision: 0
+                    }
+                }
+            }
+        }
+    });
+}
+
+// 创建热门路线排行图表
+function createRoutesChart(data) {
+    const ctx = document.getElementById('routes-chart').getContext('2d');
+
+    const chart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: data.labels,
+            datasets: [{
+                label: '预订数量',
+                data: data.values,
+                backgroundColor: [
+                    'rgba(255, 99, 132, 0.6)',
+                    'rgba(54, 162, 235, 0.6)',
+                    'rgba(255, 206, 86, 0.6)',
+                    'rgba(75, 192, 192, 0.6)',
+                    'rgba(153, 102, 255, 0.6)'
+                ],
+                borderColor: [
+                    'rgba(255, 99, 132, 1)',
+                    'rgba(54, 162, 235, 1)',
+                    'rgba(255, 206, 86, 1)',
+                    'rgba(75, 192, 192, 1)',
+                    'rgba(153, 102, 255, 1)'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'right'
+                }
+            }
+        }
+    });
+}
+
+// 创建收入趋势分析图表
+function createRevenueChart(data) {
+    const ctx = document.getElementById('revenue-chart').getContext('2d');
+
+    const chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: data.labels,
+            datasets: [{
+                label: '收入 (¥)',
+                data: data.values,
+                fill: {
+                    target: 'origin',
+                    above: 'rgba(58, 123, 213, 0.1)'
+                },
+                borderColor: 'rgba(58, 123, 213, 1)',
+                borderWidth: 2,
+                tension: 0.3,
+                pointRadius: 4,
+                pointBackgroundColor: 'rgba(58, 123, 213, 1)'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+}
+
+// 辅助函数：根据状态获取徽章类名
+function getStatusBadgeClass(status) {
+    switch (status) {
+        case 'active':
+            return 'badge-success';
+        case 'completed':
+            return 'badge-primary';
+        case 'cancelled':
+            return 'badge-danger';
+        default:
+            return 'badge-secondary';
+    }
+}
+
+// 辅助函数：根据状态获取显示文本
+function getStatusText(status) {
+    switch (status) {
+        case 'active':
+            return '活跃';
+        case 'completed':
+            return '已完成';
+        case 'cancelled':
+            return '已取消';
+        default:
+            return '未知';
+    }
+}
+
+// 辅助函数：根据预订状态获取徽章类名
+function getBookingStatusBadgeClass(status) {
+    switch (status) {
+        case 'confirmed':
+            return 'badge-success';
+        case 'cancelled':
+            return 'badge-danger';
+        case 'rejected':
+            return 'badge-danger';
+        case 'waiting':
+            return 'badge-secondary';
+        default:
+            return 'badge-secondary';
+    }
+}
+
+// 辅助函数：根据预订状态获取显示文本
+function getBookingStatusText(status) {
+    switch (status) {
+        case 'confirmed':
+            return '已确认';
+        case 'cancelled':
+            return '已取消';
+        case 'rejected':
+            return '已拒绝';
+        case 'waiting':
+            return '待确认';
+        default:
+            return '未知';
+    }
+}
+</script>
+{% endblock %}
