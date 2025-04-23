@@ -1,0 +1,462 @@
+{% extends "base.html" %}
+
+{% block title %}旅行社管理系统 - OTA系统{% endblock %}
+
+{% block styles %}
+.dashboard {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.dashboard-header {
+    background: linear-gradient(120deg, var(--primary-color), var(--dark-color));
+    color: white;
+    padding: 20px 0;
+}
+
+.navbar-brand {
+    font-size: 1.4rem;
+    font-weight: 700;
+}
+
+.dashboard-container {
+    flex-grow: 1;
+    padding: 30px 0;
+}
+
+.dashboard-sidebar {
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+    padding: 20px;
+    height: 100%;
+}
+
+.sidebar-menu {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.sidebar-menu li {
+    margin-bottom: 5px;
+}
+
+.sidebar-menu li a {
+    display: flex;
+    align-items: center;
+    padding: 12px 15px;
+    color: #555;
+    text-decoration: none;
+    border-radius: 10px;
+    transition: all 0.3s ease;
+}
+
+.sidebar-menu li a:hover, .sidebar-menu li a.active {
+    background: rgba(58, 123, 213, 0.1);
+    color: var(--primary-color);
+}
+
+.sidebar-menu li a i {
+    margin-right: 10px;
+    font-size: 1.2rem;
+}
+
+.dashboard-content {
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+    padding: 25px;
+    height: 100%;
+    overflow: hidden;
+}
+
+.dashboard-title {
+    margin-bottom: 25px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.dashboard-title h2 {
+    color: var(--dark-color);
+    font-weight: 700;
+    font-size: 1.6rem;
+    margin: 0;
+}
+
+.dashboard-card {
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+    background: #f8f9fa;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.dashboard-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+}
+
+.card-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 15px;
+}
+
+.card-icon i {
+    font-size: 1.8rem;
+    color: white;
+}
+
+.card-icon.routes {
+    background: linear-gradient(120deg, #3a7bd5, #00d2ff);
+}
+
+.card-icon.guides {
+    background: linear-gradient(120deg, #f2994a, #f2c94c);
+}
+
+.card-icon.bookings {
+    background: linear-gradient(120deg, #00b09b, #96c93d);
+}
+
+.card-icon.revenue {
+    background: linear-gradient(120deg, #8e2de2, #4a00e0);
+}
+
+.card-title {
+    font-size: 0.9rem;
+    color: #777;
+    margin-bottom: 5px;
+}
+
+.card-value {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--dark-color);
+}
+
+.route-table {
+    margin-top: 20px;
+}
+
+.route-table th {
+    font-weight: 600;
+    color: #555;
+    padding: 15px;
+}
+
+.route-table td {
+    padding: 15px;
+    vertical-align: middle;
+}
+
+.route-table tr {
+    border-bottom: 1px solid #eee;
+}
+
+.route-table tr:last-child {
+    border-bottom: none;
+}
+
+.route-table .badge {
+    padding: 8px 12px;
+    border-radius: 30px;
+}
+
+.action-btn {
+    padding: 8px 15px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.85rem;
+}
+
+.action-btn i {
+    margin-right: 5px;
+}
+
+.user-dropdown .dropdown-toggle::after {
+    display: none;
+}
+
+.user-dropdown .dropdown-toggle {
+    background: transparent;
+    border: none;
+    color: white;
+}
+
+.user-dropdown .dropdown-menu {
+    border-radius: 12px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    border: none;
+    padding: 10px;
+    min-width: 200px;
+}
+
+.user-dropdown .dropdown-item {
+    border-radius: 8px;
+    padding: 10px 15px;
+}
+
+.user-dropdown .dropdown-item i {
+    margin-right: 8px;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 40px 20px;
+}
+
+.empty-state i {
+    font-size: 4rem;
+    color: #ddd;
+    display: block;
+    margin-bottom: 20px;
+}
+
+.empty-state h4 {
+    color: #777;
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+.empty-state p {
+    color: #999;
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+.tab-content {
+    padding-top: 20px;
+}
+
+.nav-tabs {
+    border-bottom: 1px solid #eee;
+}
+
+.nav-tabs .nav-link {
+    border: none;
+    color: #777;
+    font-weight: 600;
+    padding: 12px 20px;
+}
+
+.nav-tabs .nav-link:hover {
+    border: none;
+    color: var(--primary-color);
+}
+
+.nav-tabs .nav-link.active {
+    color: var(--primary-color);
+    border: none;
+    border-bottom: 2px solid var(--primary-color);
+    background: transparent;
+}
+{% endblock %}
+
+{% block content %}
+<div class="dashboard">
+    <header class="dashboard-header">
+        <nav class="navbar navbar-dark">
+            <div class="container">
+                <a class="navbar-brand" href="/agency/dashboard/">
+                    <i class='bx bxs-building-house'></i> 旅行社管理系统
+                </a>
+                <div class="dropdown user-dropdown">
+                    <button class="btn dropdown-toggle" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class='bx bx-user-circle'></i> {{ request.user.username }}
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                        <li><a class="dropdown-item" href="#"><i class='bx bx-user'></i> 个人信息</a></li>
+                        <li><a class="dropdown-item" href="#"><i class='bx bx-cog'></i> 账户设置</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="/logout/"><i class='bx bx-log-out'></i> 退出登录</a></li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <div class="dashboard-container">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="dashboard-sidebar">
+                        <ul class="sidebar-menu">
+                            <li>
+                                <a href="#dashboard-tab" class="active" data-bs-toggle="tab">
+                                    <i class='bx bx-home-alt'></i> 总览
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#routes-tab" data-bs-toggle="tab">
+                                    <i class='bx bx-map-alt'></i> 路线管理
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#guides-tab" data-bs-toggle="tab">
+                                    <i class='bx bx-user-pin'></i> 导游管理
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#bookings-tab" data-bs-toggle="tab">
+                                    <i class='bx bx-calendar-check'></i> 预订管理
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#itineraries-tab" data-bs-toggle="tab">
+                                    <i class='bx bx-trip'></i> 行程安排
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#complaints-tab" data-bs-toggle="tab">
+                                    <i class='bx bx-message-square-detail'></i> 投诉处理
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#statistics-tab" data-bs-toggle="tab">
+                                    <i class='bx bx-line-chart'></i> 统计分析
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-md-9">
+                    <div class="dashboard-content">
+                        <div class="tab-content">
+                            <!-- 仪表盘总览 -->
+                            <div class="tab-pane fade show active" id="dashboard-tab">
+                                <div class="dashboard-title">
+                                    <h2>仪表盘总览</h2>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-6 col-lg-3">
+                                        <div class="dashboard-card">
+                                            <div class="card-icon routes">
+                                                <i class='bx bx-map'></i>
+                                            </div>
+                                            <div class="card-title">线路总数</div>
+                                            <div class="card-value">0</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 col-lg-3">
+                                        <div class="dashboard-card">
+                                            <div class="card-icon guides">
+                                                <i class='bx bx-user-voice'></i>
+                                            </div>
+                                            <div class="card-title">导游总数</div>
+                                            <div class="card-value">0</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 col-lg-3">
+                                        <div class="dashboard-card">
+                                            <div class="card-icon bookings">
+                                                <i class='bx bx-calendar-event'></i>
+                                            </div>
+                                            <div class="card-title">预订总数</div>
+                                            <div class="card-value">0</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 col-lg-3">
+                                        <div class="dashboard-card">
+                                            <div class="card-icon revenue">
+                                                <i class='bx bx-wallet'></i>
+                                            </div>
+                                            <div class="card-title">收入总额</div>
+                                            <div class="card-value">¥0</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="row mt-4">
+                                    <div class="col-md-12">
+                                        <h5 class="mb-3">近期行程</h5>
+                                        <div class="empty-state">
+                                            <i class='bx bx-calendar'></i>
+                                            <h4>暂无近期行程</h4>
+                                            <p>您还没有创建任何行程，点击行程安排添加新的行程。</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 路线管理 -->
+                            <div class="tab-pane fade" id="routes-tab">
+                                <div class="dashboard-title">
+                                    <h2>路线管理</h2>
+                                    <button class="btn btn-primary">
+                                        <i class='bx bx-plus'></i> 新增线路
+                                    </button>
+                                </div>
+                                
+                                <div class="empty-state">
+                                    <i class='bx bx-map'></i>
+                                    <h4>暂无线路数据</h4>
+                                    <p>您还没有创建任何旅游线路，点击右上角的"新增线路"按钮添加。</p>
+                                </div>
+                            </div>
+                            
+                            <!-- 导游管理 -->
+                            <div class="tab-pane fade" id="guides-tab">
+                                <div class="dashboard-title">
+                                    <h2>导游管理</h2>
+                                    <button class="btn btn-primary">
+                                        <i class='bx bx-plus'></i> 添加导游
+                                    </button>
+                                </div>
+                                
+                                <div class="empty-state">
+                                    <i class='bx bx-user-pin'></i>
+                                    <h4>暂无导游数据</h4>
+                                    <p>您的旅行社还没有关联任何导游，可以邀请导游加入或创建新导游账户。</p>
+                                </div>
+                            </div>
+                            
+                            <!-- 更多标签页内容... -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 侧边栏菜单项点击激活状态切换
+    const sidebarLinks = document.querySelectorAll('.sidebar-menu a');
+    sidebarLinks.forEach(link => {
+        link.addEventListener('click', function() {
+            sidebarLinks.forEach(l => l.classList.remove('active'));
+            this.classList.add('active');
+        });
+    });
+    
+    // 这里可以添加加载路线、导游、预订等数据的AJAX请求
+    // 例如：
+    // 加载路线数据
+    /*
+    function loadRoutes() {
+        fetch('/api/routes/')
+        .then(response => response.json())
+        .then(data => {
+            // 处理数据，更新UI
+        })
+        .catch(error => console.error('Error loading routes:', error));
+    }
+    
+    loadRoutes();
+    */
+});
+</script>
+{% endblock %}
